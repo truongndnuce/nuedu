@@ -1,0 +1,138 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "create": "Create",
+    "search": "Search",
+    "confirm": "Confirm",
+    "back": "Back",
+    "readMore": "Read more",
+    "seeAll": "See all"
+  },
+  "nav": {
+    "home": "Home",
+    "news": "News",
+    "trainers": "Trainers",
+    "about": "About",
+    "contact": "Contact",
+    "portal": "Portal"
+  },
+  "home": {
+    "heroTitle": "Professional PT Gym career training",
+    "heroSubtitle": "NUEDU trains personal trainers through an A-Z curriculum: anatomy, nutrition, coaching technique, real practice, and career direction.",
+    "heroCtaPrimary": "View training program",
+    "heroCtaSecondary": "Why NUEDU",
+    "servicesTitle": "What you learn at NUEDU",
+    "trainersTitle": "Instructor team",
+    "newsTitle": "Latest News"
+  },
+  "news": {
+    "title": "News",
+    "allCategories": "All",
+    "publishedAt": "Published",
+    "author": "Author",
+    "relatedPosts": "Related posts",
+    "noPostsFound": "No posts found"
+  },
+  "trainers": {
+    "title": "Our Trainers",
+    "subtitle": "Meet our specialists"
+  },
+  "about": {
+    "title": "About Us",
+    "mission": "Mission",
+    "vision": "Vision"
+  },
+  "chat": {
+    "placeholder": "Type a message...",
+    "send": "Send",
+    "typing": "typing...",
+    "startChat": "Start a conversation",
+    "offline": "No agents are currently online",
+    "preChatName": "Your name (optional)",
+    "preChatPhone": "Phone number (optional)",
+    "preChatSkip": "Skip",
+    "preChatStart": "Start chat"
+  },
+  "portal": {
+    "dashboard": {
+      "title": "Dashboard",
+      "publishedPosts": "Published posts",
+      "scheduledPosts": "Scheduled posts",
+      "draftPosts": "Draft posts",
+      "openConversations": "Open conversations",
+      "recentActivity": "Recent activity",
+      "quickActions": "Quick actions",
+      "createPost": "Create post",
+      "viewChat": "View chat inbox"
+    },
+    "posts": {
+      "title": "Posts",
+      "new": "New post",
+      "all": "All",
+      "published": "Published",
+      "scheduled": "Scheduled",
+      "draft": "Draft",
+      "titleLabel": "Title",
+      "contentLabel": "Content",
+      "featuredImage": "Featured image",
+      "publishNow": "Publish now",
+      "saveDraft": "Save draft",
+      "schedule": "Schedule",
+      "category": "Category",
+      "tags": "Tags",
+      "seo": "SEO",
+      "metaTitle": "SEO title",
+      "metaDescription": "SEO description",
+      "slug": "Slug",
+      "tabVi": "Tiếng Việt",
+      "tabEn": "English",
+      "autoSaving": "Auto-saving...",
+      "savedAt": "Saved at"
+    },
+    "chat": {
+      "title": "Inbox",
+      "open": "Open",
+      "assignedToMe": "Assigned to me",
+      "closed": "Closed",
+      "assign": "Assign to me",
+      "close": "Close conversation",
+      "noConversations": "No conversations"
+    },
+    "media": {
+      "title": "Media library",
+      "upload": "Upload",
+      "dropHere": "Drop files here",
+      "copyUrl": "Copy URL",
+      "noMedia": "No media yet"
+    },
+    "users": {
+      "title": "Users",
+      "new": "Add staff",
+      "role": "Role",
+      "status": "Status",
+      "lastLogin": "Last login",
+      "permissions": "Permissions",
+      "activate": "Activate",
+      "deactivate": "Deactivate"
+    },
+    "login": {
+      "title": "Sign in",
+      "email": "Email",
+      "password": "Password",
+      "rememberMe": "Remember me",
+      "submit": "Sign in",
+      "error": "Invalid email or password"
+    }
+  },
+  "errors": {
+    "notFound": "Page not found",
+    "serverError": "Server error",
+    "unauthorized": "You don't have permission to access this",
+    "goHome": "Go home"
+  }
+}

@@ -1,0 +1,138 @@
+{
+  "common": {
+    "loading": "Đang tải...",
+    "error": "Đã xảy ra lỗi",
+    "save": "Lưu",
+    "cancel": "Hủy",
+    "delete": "Xóa",
+    "edit": "Chỉnh sửa",
+    "create": "Tạo mới",
+    "search": "Tìm kiếm",
+    "confirm": "Xác nhận",
+    "back": "Quay lại",
+    "readMore": "Xem thêm",
+    "seeAll": "Xem tất cả"
+  },
+  "nav": {
+    "home": "Trang chủ",
+    "news": "Tin tức",
+    "trainers": "Giáo viên",
+    "about": "Giới thiệu",
+    "contact": "Liên hệ",
+    "portal": "Quản lý"
+  },
+  "home": {
+    "heroTitle": "Đào tạo nghề PT Gym chuyên nghiệp",
+    "heroSubtitle": "Học viện NUEDU đào tạo huấn luyện viên thể hình theo giáo trình A-Z: giải phẫu, dinh dưỡng, kỹ thuật huấn luyện, thực chiến và định hướng việc làm.",
+    "heroCtaPrimary": "Xem khóa đào tạo",
+    "heroCtaSecondary": "Vì sao chọn NUEDU",
+    "servicesTitle": "Bạn sẽ học gì tại NUEDU",
+    "trainersTitle": "Đội ngũ giảng viên",
+    "newsTitle": "Tin tức mới nhất"
+  },
+  "news": {
+    "title": "Tin tức",
+    "allCategories": "Tất cả",
+    "publishedAt": "Ngày đăng",
+    "author": "Tác giả",
+    "relatedPosts": "Bài viết liên quan",
+    "noPostsFound": "Không tìm thấy bài viết nào"
+  },
+  "trainers": {
+    "title": "Đội ngũ giáo viên",
+    "subtitle": "Gặp gỡ những chuyên gia của chúng tôi"
+  },
+  "about": {
+    "title": "Giới thiệu",
+    "mission": "Sứ mệnh",
+    "vision": "Tầm nhìn"
+  },
+  "chat": {
+    "placeholder": "Nhập tin nhắn...",
+    "send": "Gửi",
+    "typing": "đang gõ...",
+    "startChat": "Bắt đầu trò chuyện",
+    "offline": "Hiện tại không có nhân viên trực tuyến",
+    "preChatName": "Tên của bạn (không bắt buộc)",
+    "preChatPhone": "Số điện thoại (không bắt buộc)",
+    "preChatSkip": "Bỏ qua",
+    "preChatStart": "Bắt đầu chat"
+  },
+  "portal": {
+    "dashboard": {
+      "title": "Tổng quan",
+      "publishedPosts": "Bài đã đăng",
+      "scheduledPosts": "Bài đã lên lịch",
+      "draftPosts": "Bài nháp",
+      "openConversations": "Cuộc trò chuyện mở",
+      "recentActivity": "Hoạt động gần đây",
+      "quickActions": "Thao tác nhanh",
+      "createPost": "Tạo bài viết",
+      "viewChat": "Xem hộp thư chat"
+    },
+    "posts": {
+      "title": "Bài viết",
+      "new": "Tạo bài mới",
+      "all": "Tất cả",
+      "published": "Đã đăng",
+      "scheduled": "Đã lên lịch",
+      "draft": "Nháp",
+      "titleLabel": "Tiêu đề",
+      "contentLabel": "Nội dung",
+      "featuredImage": "Ảnh đại diện",
+      "publishNow": "Đăng ngay",
+      "saveDraft": "Lưu nháp",
+      "schedule": "Lên lịch",
+      "category": "Danh mục",
+      "tags": "Thẻ",
+      "seo": "SEO",
+      "metaTitle": "Tiêu đề SEO",
+      "metaDescription": "Mô tả SEO",
+      "slug": "Đường dẫn",
+      "tabVi": "Tiếng Việt",
+      "tabEn": "English",
+      "autoSaving": "Đang tự lưu...",
+      "savedAt": "Đã lưu lúc"
+    },
+    "chat": {
+      "title": "Hộp thư",
+      "open": "Đang mở",
+      "assignedToMe": "Giao cho tôi",
+      "closed": "Đã đóng",
+      "assign": "Giao cho tôi",
+      "close": "Đóng cuộc trò chuyện",
+      "noConversations": "Không có cuộc trò chuyện nào"
+    },
+    "media": {
+      "title": "Thư viện ảnh",
+      "upload": "Tải lên",
+      "dropHere": "Kéo thả file vào đây",
+      "copyUrl": "Sao chép URL",
+      "noMedia": "Chưa có ảnh nào"
+    },
+    "users": {
+      "title": "Người dùng",
+      "new": "Thêm nhân viên",
+      "role": "Vai trò",
+      "status": "Trạng thái",
+      "lastLogin": "Đăng nhập lần cuối",
+      "permissions": "Phân quyền",
+      "activate": "Kích hoạt",
+      "deactivate": "Vô hiệu hóa"
+    },
+    "login": {
+      "title": "Đăng nhập",
+      "email": "Email",
+      "password": "Mật khẩu",
+      "rememberMe": "Ghi nhớ đăng nhập",
+      "submit": "Đăng nhập",
+      "error": "Email hoặc mật khẩu không đúng"
+    }
+  },
+  "errors": {
+    "notFound": "Trang không tìm thấy",
+    "serverError": "Lỗi máy chủ",
+    "unauthorized": "Bạn không có quyền truy cập",
+    "goHome": "Về trang chủ"
+  }
+}
