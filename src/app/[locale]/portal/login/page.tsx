@@ -103,9 +103,6 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <p className="mt-4 text-center text-xs text-muted-foreground">
-            Dev mode: nhập bất kỳ email/password nào để đăng nhập
-          </p>
         </div>
       </div>
     </div>
