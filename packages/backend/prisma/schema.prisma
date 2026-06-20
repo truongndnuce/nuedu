@@ -161,27 +161,34 @@ enum MediaResourceType {
   RAW
 }
 
+enum MediaStatus {
+  PENDING
+  CONFIRMED
+}
+
 model Media {
-  id           String            @id @default(uuid())
-  originalName String
-  mimeType     String
-  size         Int
-  resourceType MediaResourceType @default(IMAGE)
-  cloudinaryId String            @unique
-  cloudinaryUrl String
+  id            String            @id @default(uuid())
+  originalName  String
+  mimeType      String
+  size          Int
+  resourceType  MediaResourceType @default(IMAGE)
+  cloudinaryId  String            @unique
+  cloudinaryUrl String?
   folder        String
   format        String?
   width         Int?
   height        Int?
-  isPrivate     Boolean          @default(false)
+  isPrivate     Boolean           @default(false)
+  status        MediaStatus       @default(PENDING)
   uploadedById  String
-  uploadedBy    User             @relation(fields: [uploadedById], references: [id])
-  createdAt     DateTime         @default(now())
+  uploadedBy    User              @relation(fields: [uploadedById], references: [id])
+  createdAt     DateTime          @default(now())
 
   postsAsFeatured Post[]
 
   @@index([uploadedById])
   @@index([folder])
+  @@index([status])
 }
 
 // ===== CHAT =====

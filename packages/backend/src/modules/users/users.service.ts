@@ -8,6 +8,7 @@ import { UserRole } from '@prisma/client';
 import * as argon2 from 'argon2';
 import * as crypto from 'crypto';
 import { PrismaService } from '../../config/prisma.service';
+import { AuditService } from '../audit/audit.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { ListUsersDto } from './dto/list-users.dto';
 import { UpdatePermissionsDto } from './dto/update-permissions.dto';
@@ -27,7 +28,10 @@ const USER_SELECT = {
 
 @Injectable()
 export class UsersService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private readonly audit: AuditService,
+  ) {}
 
   async list(dto: ListUsersDto) {
     const page = dto.page ?? 1;
@@ -69,6 +73,7 @@ export class UsersService {
       select: USER_SELECT,
     });
 
+    void this.audit.log({ userId: createdById, action: 'user.create', entityType: 'User', entityId: user.id, metadata: { email: dto.email, role: dto.role } });
     return { ...user, temporaryPassword: dto.password ? undefined : password };
   }
 
@@ -103,11 +108,13 @@ export class UsersService {
   async softDelete(id: string, requestingUserId: string) {
     if (id === requestingUserId) throw new BadRequestException('Cannot deactivate yourself');
     await this.assertExists(id);
-    return this.prisma.user.update({
+    const user = await this.prisma.user.update({
       where: { id },
       data: { isActive: false },
       select: USER_SELECT,
     });
+    void this.audit.log({ userId: requestingUserId, action: 'user.delete', entityType: 'User', entityId: id });
+    return user;
   }
 
   async resetPassword(id: string) {
@@ -150,7 +157,7 @@ export class UsersService {
     };
   }
 
-  async updatePermissions(id: string, dto: UpdatePermissionsDto) {
+  async updatePermissions(id: string, dto: UpdatePermissionsDto, updatedById?: string) {
     await this.assertExists(id);
 
     const permKeys = dto.permissions.map((p) => p.key);
@@ -175,6 +182,7 @@ export class UsersService {
       }),
     );
 
+    void this.audit.log({ userId: updatedById, action: 'permission.update', entityType: 'User', entityId: id, metadata: { permissions: dto.permissions } });
     return this.getPermissions(id);
   }
 

@@ -10,6 +10,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { ApiCookieAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
 import { FastifyReply, FastifyRequest } from 'fastify';
 import { CurrentUser, Public } from '../../common/decorators';
 import { AuthService } from './auth.service';
@@ -38,6 +39,7 @@ export class AuthController {
   @Public()
   @Post('login')
   @HttpCode(HttpStatus.OK)
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
   @ApiOperation({ summary: 'Staff/Admin login' })
   async login(
     @Body() dto: LoginDto,

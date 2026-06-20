@@ -28,6 +28,8 @@ const PERMISSIONS = [
   // users
   { key: 'users.create', group: 'users', description: 'Create staff accounts' },
   { key: 'users.read', group: 'users', description: 'List staff' },
+  // audit
+  { key: 'audit.read', group: 'audit', description: 'Read audit logs (admin only)' },
   { key: 'users.update', group: 'users', description: 'Edit staff info' },
   { key: 'users.delete', group: 'users', description: 'Deactivate staff' },
   { key: 'permissions.assign', group: 'users', description: 'Grant/revoke per-user permissions' },
@@ -105,6 +107,23 @@ async function main() {
     },
   });
   console.log(`✓ Admin user: ${admin.email}`);
+
+  // Default categories
+  const DEFAULT_CATEGORIES = [
+    { nameVi: 'Tập luyện', nameEn: 'Training', slug: 'training', order: 1 },
+    { nameVi: 'Dinh dưỡng', nameEn: 'Nutrition', slug: 'nutrition', order: 2 },
+    { nameVi: 'Phục hồi', nameEn: 'Recovery', slug: 'recovery', order: 3 },
+    { nameVi: 'Tin tức học viện', nameEn: 'Academy News', slug: 'academy-news', order: 4 },
+  ];
+
+  for (const cat of DEFAULT_CATEGORIES) {
+    await prisma.category.upsert({
+      where: { slug: cat.slug },
+      update: { nameVi: cat.nameVi, nameEn: cat.nameEn, order: cat.order },
+      create: cat,
+    });
+  }
+  console.log(`✓ ${DEFAULT_CATEGORIES.length} default categories upserted`);
 
   console.log('Seed completed.');
 }

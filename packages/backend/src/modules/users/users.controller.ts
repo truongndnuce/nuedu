@@ -80,7 +80,7 @@ export class UsersController {
   @Put(':id/permissions')
   @Permissions('permissions.assign')
   @ApiOperation({ summary: 'Override permissions for a user' })
-  updatePermissions(@Param('id') id: string, @Body() dto: UpdatePermissionsDto) {
-    return this.usersService.updatePermissions(id, dto);
+  updatePermissions(@Param('id') id: string, @Body() dto: UpdatePermissionsDto, @CurrentUser('id') actorId: string) {
+    return this.usersService.updatePermissions(id, dto, actorId);
   }
 }
