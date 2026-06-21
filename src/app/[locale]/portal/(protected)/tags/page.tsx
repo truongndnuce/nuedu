@@ -1,23 +1,33 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Pencil, Trash2, Plus, Check, X } from "lucide-react";
 import {
-  getAllTags,
-  updateTag,
+  listTags,
   createTag,
+  updateTag,
   deleteTag,
   type Tag,
-} from "@/fixtures/tags";
+} from "@/lib/api/tags.api";
 
 export default function TagsPage() {
-  const [tags, setTags] = useState<Tag[]>(getAllTags);
+  const [tags, setTags] = useState<Tag[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [editing, setEditing] = useState<string | null>(null);
   const [editVi, setEditVi] = useState("");
   const [editEn, setEditEn] = useState("");
   const [addingNew, setAddingNew] = useState(false);
   const [newVi, setNewVi] = useState("");
   const [newEn, setNewEn] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    listTags()
+      .then(setTags)
+      .catch((e) => setError(e.message))
+      .finally(() => setLoading(false));
+  }, []);
 
   function startEdit(tag: Tag) {
     setEditing(tag.id);
@@ -25,33 +35,67 @@ export default function TagsPage() {
     setEditEn(tag.nameEn);
   }
 
-  function saveEdit(id: string) {
-    updateTag(id, { nameVi: editVi, nameEn: editEn });
-    setTags(getAllTags());
-    setEditing(null);
+  async function saveEdit(id: string) {
+    setSaving(true);
+    try {
+      const updated = await updateTag(id, { nameVi: editVi, nameEn: editEn });
+      setTags((prev) => prev.map((t) => (t.id === id ? updated : t)));
+      setEditing(null);
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Lỗi khi cập nhật");
+    } finally {
+      setSaving(false);
+    }
   }
 
-  function handleDelete(id: string) {
+  async function handleDelete(id: string) {
     if (!confirm("Xóa thẻ này?")) return;
-    deleteTag(id);
-    setTags(getAllTags());
+    try {
+      await deleteTag(id);
+      setTags((prev) => prev.filter((t) => t.id !== id));
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Lỗi khi xóa");
+    }
   }
 
-  function handleCreate() {
+  async function handleCreate() {
     if (!newVi) return;
-    createTag({
-      slug: newVi.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, ""),
-      nameVi: newVi,
-      nameEn: newEn || newVi,
-    });
-    setTags(getAllTags());
-    setAddingNew(false);
-    setNewVi("");
-    setNewEn("");
+    setSaving(true);
+    try {
+      const tag = await createTag({
+        nameVi: newVi,
+        nameEn: newEn || newVi,
+      });
+      setTags((prev) => [...prev, tag]);
+      setAddingNew(false);
+      setNewVi("");
+      setNewEn("");
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Lỗi khi tạo");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex h-40 items-center justify-center">
+        <div className="h-6 w-6 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      </div>
+    );
   }
 
   return (
     <div className="space-y-6">
+      {error && (
+        <div className="rounded-lg bg-destructive/10 px-4 py-3 text-sm text-destructive">
+          {error}
+          <button className="ml-2 underline" onClick={() => setError(null)}>
+            Đóng
+          </button>
+        </div>
+      )}
+
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-foreground">Thẻ</h1>
         <button
@@ -105,7 +149,8 @@ export default function TagsPage() {
                   <div className="flex gap-1 justify-end">
                     <button
                       onClick={handleCreate}
-                      className="rounded p-1 text-primary hover:bg-muted"
+                      disabled={saving}
+                      className="rounded p-1 text-primary hover:bg-muted disabled:opacity-50"
                     >
                       <Check size={14} />
                     </button>
@@ -152,7 +197,8 @@ export default function TagsPage() {
                       <>
                         <button
                           onClick={() => saveEdit(tag.id)}
-                          className="rounded p-1 text-primary hover:bg-muted"
+                          disabled={saving}
+                          className="rounded p-1 text-primary hover:bg-muted disabled:opacity-50"
                         >
                           <Check size={14} />
                         </button>
@@ -183,6 +229,16 @@ export default function TagsPage() {
                 </td>
               </tr>
             ))}
+            {tags.length === 0 && !addingNew && (
+              <tr>
+                <td
+                  colSpan={4}
+                  className="px-4 py-8 text-center text-muted-foreground"
+                >
+                  Chưa có thẻ nào
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>

@@ -1,18 +1,19 @@
 "use client";
 
-import { useState, use, useRef, useEffect } from "react";
+import { use, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useLocale } from "next-intl";
-import { notFound } from "next/navigation";
 import { ArrowLeft, Send, UserCheck, X } from "lucide-react";
 import {
-  getConversationById,
+  getConversation,
+  getMessages,
   sendMessage,
+  assignToSelf,
   closeConversation,
-  assignConversation,
-  type Message,
-  type Conversation,
-} from "@/fixtures/conversations";
+  markRead,
+  type ConvDetail,
+  type ConvMessage,
+} from "@/lib/api/chat.api";
 import { useAuth } from "@/lib/auth/useAuth";
 import { format } from "date-fns";
 import { vi as viLocale } from "date-fns/locale";
@@ -28,43 +29,91 @@ export default function ConversationPage({
   const locale = useLocale();
   const { user } = useAuth();
 
-  const initialConv = getConversationById(id);
-  if (!initialConv) notFound();
-
-  const [conv, setConv] = useState<Conversation>(initialConv);
+  const [conv, setConv] = useState<ConvDetail | null>(null);
+  const [messages, setMessages] = useState<ConvMessage[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [input, setInput] = useState("");
+  const [sending, setSending] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    Promise.all([getConversation(id), getMessages(id)])
+      .then(([c, msgs]) => {
+        setConv(c);
+        setMessages(msgs);
+        markRead(id).catch(() => { /* ignore */ });
+      })
+      .catch((e) => setError(e.message))
+      .finally(() => setLoading(false));
+  }, [id]);
+
+  useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [conv.messages]);
+  }, [messages]);
 
-  function handleSend() {
-    if (!input.trim() || !user) return;
-    const msg = sendMessage(id, input.trim(), user.name);
-    if (msg) {
-      setConv({ ...getConversationById(id)! });
-    }
+  async function handleSend() {
+    if (!input.trim() || !user || !conv) return;
+    const content = input.trim();
+    setSending(true);
     setInput("");
+    try {
+      await sendMessage(id, content);
+      const newMsg: ConvMessage = {
+        id: `tmp-${Date.now()}`,
+        senderType: "staff",
+        content,
+        createdAt: new Date().toISOString(),
+      };
+      setMessages((prev) => [...prev, newMsg]);
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Lỗi khi gửi tin nhắn");
+      setInput(content);
+    } finally {
+      setSending(false);
+    }
   }
 
-  function handleAssign() {
-    if (!user) return;
-    assignConversation(id, user.name);
-    setConv({ ...getConversationById(id)! });
+  async function handleAssign() {
+    if (!conv) return;
+    try {
+      await assignToSelf(id);
+      setConv({ ...conv, status: "assigned" });
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Lỗi khi giao chat");
+    }
   }
 
-  function handleClose() {
-    if (!confirm("Đóng cuộc trò chuyện này?")) return;
-    closeConversation(id);
-    setConv({ ...getConversationById(id)! });
+  async function handleClose() {
+    if (!confirm("Đóng cuộc trò chuyện này?") || !conv) return;
+    try {
+      await closeConversation(id);
+      setConv({ ...conv, status: "closed" });
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Lỗi khi đóng chat");
+    }
   }
 
   const dateLocale = locale === "vi" ? viLocale : undefined;
 
+  if (loading) {
+    return (
+      <div className="flex h-full items-center justify-center">
+        <div className="h-6 w-6 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      </div>
+    );
+  }
+
+  if (!conv) {
+    return (
+      <div className="text-center py-16 text-muted-foreground">
+        Không tìm thấy cuộc trò chuyện
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col h-full -m-6">
-      {/* Header */}
       <div className="flex items-center gap-3 border-b border-border px-6 py-4 bg-background">
         <button
           onClick={() => router.back()}
@@ -78,13 +127,12 @@ export default function ConversationPage({
             <p className="text-xs text-muted-foreground">{conv.guestPhone}</p>
           )}
         </div>
-        {/* Status badge */}
         <span
           className={cn(
             "rounded-full px-2.5 py-1 text-xs font-medium",
             conv.status === "open" && "bg-green-100 text-green-700",
             conv.status === "assigned" && "bg-blue-100 text-blue-700",
-            conv.status === "closed" && "bg-muted text-muted-foreground"
+            conv.status === "closed" && "bg-muted text-muted-foreground",
           )}
         >
           {conv.status === "open"
@@ -93,7 +141,6 @@ export default function ConversationPage({
               ? "Đã giao"
               : "Đã đóng"}
         </span>
-        {/* Actions */}
         {conv.status !== "closed" && (
           <>
             {conv.status === "open" && (
@@ -116,14 +163,19 @@ export default function ConversationPage({
         )}
       </div>
 
-      {/* Messages */}
+      {error && (
+        <div className="px-6 py-2 bg-destructive/10 text-sm text-destructive">
+          {error}
+        </div>
+      )}
+
       <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
-        {conv.messages.map((msg) => (
+        {messages.map((msg) => (
           <div
             key={msg.id}
             className={cn(
               "flex flex-col max-w-[70%]",
-              msg.senderType === "staff" ? "ml-auto items-end" : "items-start"
+              msg.senderType === "staff" ? "ml-auto items-end" : "items-start",
             )}
           >
             <div
@@ -131,34 +183,38 @@ export default function ConversationPage({
                 "rounded-2xl px-4 py-2.5 text-sm",
                 msg.senderType === "staff"
                   ? "bg-primary text-primary-foreground rounded-br-sm"
-                  : "bg-muted text-foreground rounded-bl-sm"
+                  : "bg-muted text-foreground rounded-bl-sm",
               )}
             >
               {msg.content}
             </div>
             <span className="mt-1 text-[10px] text-muted-foreground px-1">
-              {msg.senderName} ·{" "}
-              {format(new Date(msg.createdAt), "HH:mm", { locale: dateLocale })}
+              {msg.senderType === "staff" ? "Nhân viên" : conv.guestName} ·{" "}
+              {format(new Date(msg.createdAt), "HH:mm", {
+                locale: dateLocale,
+              })}
             </span>
           </div>
         ))}
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input */}
       {conv.status !== "closed" ? (
         <div className="border-t border-border px-6 py-4 bg-background">
           <div className="flex items-center gap-3">
             <input
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSend()}
+              onKeyDown={(e) =>
+                e.key === "Enter" && !e.shiftKey && handleSend()
+              }
               placeholder="Nhập tin nhắn..."
-              className="flex-1 rounded-xl border border-input bg-background px-4 py-2.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+              disabled={sending}
+              className="flex-1 rounded-xl border border-input bg-background px-4 py-2.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50"
             />
             <button
               onClick={handleSend}
-              disabled={!input.trim()}
+              disabled={!input.trim() || sending}
               className="rounded-xl bg-primary p-2.5 text-primary-foreground hover:bg-primary/90 disabled:opacity-50 transition-colors"
             >
               <Send size={16} />

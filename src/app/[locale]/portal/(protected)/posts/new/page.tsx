@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useLocale } from "next-intl";
 import { useForm, Controller } from "react-hook-form";
@@ -8,7 +8,8 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { PostEditor } from "@/components/portal/posts/PostEditor";
 import { FeaturedImagePicker } from "@/components/portal/posts/FeaturedImagePicker";
-import { categories, createPost } from "@/fixtures/posts";
+import { listCategories, type Category } from "@/lib/api/categories.api";
+import { createPost, publishPost } from "@/lib/api/posts.api";
 import { ArrowLeft } from "lucide-react";
 
 const postSchema = z.object({
@@ -18,9 +19,7 @@ const postSchema = z.object({
   contentEn: z.string().optional(),
   excerptVi: z.string().optional(),
   excerptEn: z.string().optional(),
-  featuredImage: z.string().optional(),
-  categorySlug: z.string().min(1),
-  status: z.enum(["published", "draft", "scheduled"]),
+  categoryId: z.string().optional(),
   metaTitleVi: z.string().optional(),
   metaDescriptionVi: z.string().optional(),
 });
@@ -32,55 +31,65 @@ export default function NewPostPage() {
   const locale = useLocale();
   const [activeTab, setActiveTab] = useState<"vi" | "en">("vi");
   const [seoOpen, setSeoOpen] = useState(false);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    listCategories()
+      .then(setCategories)
+      .catch(() => { /* categories optional */ });
+  }, []);
 
   const {
     register,
     handleSubmit,
     control,
-    setValue,
-    watch,
-    formState: { errors, isSubmitting },
+    formState: { errors },
   } = useForm<PostFormData>({
     resolver: zodResolver(postSchema),
     defaultValues: {
-      categorySlug: categories[0].slug,
-      status: "draft",
       contentVi: "",
       contentEn: "",
     },
   });
 
-  function onSubmit(data: PostFormData, status: "published" | "draft") {
-    const category = categories.find((c) => c.slug === data.categorySlug)!;
-    createPost({
-      slug:
-        data.titleVi
-          .toLowerCase()
-          .replace(/\s+/g, "-")
-          .replace(/[^a-z0-9-]/g, "") +
-        "-" +
-        Date.now(),
-      titleVi: data.titleVi,
-      titleEn: data.titleEn ?? data.titleVi,
-      excerptVi: data.excerptVi ?? "",
-      excerptEn: data.excerptEn ?? data.excerptVi ?? "",
-      contentVi: data.contentVi ?? "",
-      contentEn: data.contentEn ?? "",
-      featuredImage: data.featuredImage,
-      status,
-      publishedAt: new Date().toISOString(),
-      category,
-      tags: [],
-      author: { id: "1", name: "Admin NUEDU" },
-      metaTitleVi: data.metaTitleVi,
-      metaDescriptionVi: data.metaDescriptionVi,
-    });
-    router.push(`/${locale}/portal/posts`);
+  async function onSubmit(data: PostFormData, publish: boolean) {
+    setSubmitting(true);
+    setError(null);
+    try {
+      const post = await createPost({
+        titleVi: data.titleVi,
+        titleEn: data.titleEn || data.titleVi,
+        excerptVi: data.excerptVi,
+        excerptEn: data.excerptEn || data.excerptVi,
+        contentVi: data.contentVi,
+        contentEn: data.contentEn,
+        categoryId: data.categoryId || undefined,
+        metaTitleVi: data.metaTitleVi,
+        metaDescriptionVi: data.metaDescriptionVi,
+      });
+
+      if (publish) {
+        await publishPost(post.id);
+      }
+
+      router.push(`/${locale}/portal/posts`);
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Lỗi khi tạo bài viết");
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
     <div className="space-y-6">
-      {/* Header */}
+      {error && (
+        <div className="rounded-lg bg-destructive/10 px-4 py-3 text-sm text-destructive">
+          {error}
+        </div>
+      )}
+
       <div className="flex items-center gap-3">
         <button
           onClick={() => router.back()}
@@ -92,9 +101,7 @@ export default function NewPostPage() {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[1fr_300px]">
-        {/* Main content */}
         <div className="space-y-4">
-          {/* Lang tabs */}
           <div className="flex gap-1 border-b border-border">
             {(["vi", "en"] as const).map((lang) => (
               <button
@@ -166,7 +173,6 @@ export default function NewPostPage() {
             </>
           )}
 
-          {/* SEO Accordion */}
           <div className="rounded-xl border border-border overflow-hidden">
             <button
               type="button"
@@ -194,24 +200,22 @@ export default function NewPostPage() {
           </div>
         </div>
 
-        {/* Sidebar */}
         <div className="space-y-4">
-          {/* Publish card */}
           <div className="rounded-xl border border-border bg-card p-4 space-y-3">
             <h3 className="text-sm font-semibold text-foreground">Xuất bản</h3>
             <div className="flex flex-col gap-2">
               <button
                 type="button"
-                onClick={handleSubmit((d) => onSubmit(d, "published"))}
-                disabled={isSubmitting}
+                onClick={handleSubmit((d) => onSubmit(d, true))}
+                disabled={submitting}
                 className="w-full rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-60 transition-colors"
               >
-                Đăng ngay
+                {submitting ? "Đang lưu..." : "Đăng ngay"}
               </button>
               <button
                 type="button"
-                onClick={handleSubmit((d) => onSubmit(d, "draft"))}
-                disabled={isSubmitting}
+                onClick={handleSubmit((d) => onSubmit(d, false))}
+                disabled={submitting}
                 className="w-full rounded-lg border border-border px-4 py-2 text-sm font-medium hover:bg-muted transition-colors"
               >
                 Lưu nháp
@@ -219,34 +223,29 @@ export default function NewPostPage() {
             </div>
           </div>
 
-          {/* Category */}
           <div className="rounded-xl border border-border bg-card p-4 space-y-2">
             <h3 className="text-sm font-semibold text-foreground">Danh mục</h3>
             <select
-              {...register("categorySlug")}
+              {...register("categoryId")}
               className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
             >
+              <option value="">— Chọn danh mục —</option>
               {categories.map((cat) => (
-                <option key={cat.slug} value={cat.slug}>
+                <option key={cat.id} value={cat.id}>
                   {cat.nameVi}
                 </option>
               ))}
             </select>
           </div>
 
-          {/* Featured image */}
           <div className="rounded-xl border border-border bg-card p-4 space-y-2">
-            <h3 className="text-sm font-semibold text-foreground">Ảnh đại diện</h3>
-            <Controller
-              name="featuredImage"
-              control={control}
-              render={({ field }) => (
-                <FeaturedImagePicker
-                  value={field.value}
-                  onChange={field.onChange}
-                />
-              )}
-            />
+            <h3 className="text-sm font-semibold text-foreground">
+              Ảnh đại diện
+            </h3>
+            <FeaturedImagePicker value={undefined} onChange={() => {}} />
+            <p className="text-xs text-muted-foreground">
+              Tích hợp Cloudinary sẽ được bổ sung sau
+            </p>
           </div>
         </div>
       </div>

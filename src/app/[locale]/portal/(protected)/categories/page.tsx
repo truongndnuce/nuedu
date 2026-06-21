@@ -1,17 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Pencil, Trash2, Plus, Check, X } from "lucide-react";
 import {
-  getAllCategories,
-  updateCategory,
+  listCategories,
   createCategory,
+  updateCategory,
   deleteCategory,
   type Category,
-} from "@/fixtures/categories";
+} from "@/lib/api/categories.api";
 
 export default function CategoriesPage() {
-  const [categories, setCategories] = useState<Category[]>(getAllCategories);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [editing, setEditing] = useState<string | null>(null);
   const [editVi, setEditVi] = useState("");
   const [editEn, setEditEn] = useState("");
@@ -19,6 +21,14 @@ export default function CategoriesPage() {
   const [newVi, setNewVi] = useState("");
   const [newEn, setNewEn] = useState("");
   const [newSlug, setNewSlug] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    listCategories()
+      .then(setCategories)
+      .catch((e) => setError(e.message))
+      .finally(() => setLoading(false));
+  }, []);
 
   function startEdit(cat: Category) {
     setEditing(cat.id);
@@ -26,34 +36,69 @@ export default function CategoriesPage() {
     setEditEn(cat.nameEn);
   }
 
-  function saveEdit(id: string) {
-    updateCategory(id, { nameVi: editVi, nameEn: editEn });
-    setCategories(getAllCategories());
-    setEditing(null);
+  async function saveEdit(id: string) {
+    setSaving(true);
+    try {
+      const updated = await updateCategory(id, { nameVi: editVi, nameEn: editEn });
+      setCategories((prev) => prev.map((c) => (c.id === id ? updated : c)));
+      setEditing(null);
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Lỗi khi cập nhật");
+    } finally {
+      setSaving(false);
+    }
   }
 
-  function handleDelete(id: string) {
+  async function handleDelete(id: string) {
     if (!confirm("Xóa danh mục này?")) return;
-    deleteCategory(id);
-    setCategories(getAllCategories());
+    try {
+      await deleteCategory(id);
+      setCategories((prev) => prev.filter((c) => c.id !== id));
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Lỗi khi xóa");
+    }
   }
 
-  function handleCreate() {
+  async function handleCreate() {
     if (!newVi || !newSlug) return;
-    createCategory({
-      slug: newSlug,
-      nameVi: newVi,
-      nameEn: newEn || newVi,
-    });
-    setCategories(getAllCategories());
-    setAddingNew(false);
-    setNewVi("");
-    setNewEn("");
-    setNewSlug("");
+    setSaving(true);
+    try {
+      const cat = await createCategory({
+        slug: newSlug,
+        nameVi: newVi,
+        nameEn: newEn || newVi,
+      });
+      setCategories((prev) => [...prev, cat]);
+      setAddingNew(false);
+      setNewVi("");
+      setNewEn("");
+      setNewSlug("");
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Lỗi khi tạo");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex h-40 items-center justify-center">
+        <div className="h-6 w-6 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      </div>
+    );
   }
 
   return (
     <div className="space-y-6">
+      {error && (
+        <div className="rounded-lg bg-destructive/10 px-4 py-3 text-sm text-destructive">
+          {error}
+          <button className="ml-2 underline" onClick={() => setError(null)}>
+            Đóng
+          </button>
+        </div>
+      )}
+
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-foreground">Danh mục</h1>
         <button
@@ -82,7 +127,6 @@ export default function CategoriesPage() {
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
-            {/* New row */}
             {addingNew && (
               <tr className="bg-muted/20">
                 <td className="px-4 py-2">
@@ -105,7 +149,9 @@ export default function CategoriesPage() {
                   <input
                     value={newSlug}
                     onChange={(e) =>
-                      setNewSlug(e.target.value.toLowerCase().replace(/\s+/g, "-"))
+                      setNewSlug(
+                        e.target.value.toLowerCase().replace(/\s+/g, "-"),
+                      )
                     }
                     placeholder="slug"
                     className="w-full rounded border border-input bg-background px-2 py-1 text-sm font-mono focus:outline-none focus:ring-1 focus:ring-ring"
@@ -115,7 +161,8 @@ export default function CategoriesPage() {
                   <div className="flex gap-1 justify-end">
                     <button
                       onClick={handleCreate}
-                      className="rounded p-1 text-primary hover:bg-muted"
+                      disabled={saving}
+                      className="rounded p-1 text-primary hover:bg-muted disabled:opacity-50"
                     >
                       <Check size={14} />
                     </button>
@@ -162,7 +209,8 @@ export default function CategoriesPage() {
                       <>
                         <button
                           onClick={() => saveEdit(cat.id)}
-                          className="rounded p-1 text-primary hover:bg-muted"
+                          disabled={saving}
+                          className="rounded p-1 text-primary hover:bg-muted disabled:opacity-50"
                         >
                           <Check size={14} />
                         </button>
@@ -193,6 +241,16 @@ export default function CategoriesPage() {
                 </td>
               </tr>
             ))}
+            {categories.length === 0 && !addingNew && (
+              <tr>
+                <td
+                  colSpan={4}
+                  className="px-4 py-8 text-center text-muted-foreground"
+                >
+                  Chưa có danh mục nào
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>

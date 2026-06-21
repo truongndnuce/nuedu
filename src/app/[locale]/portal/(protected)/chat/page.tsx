@@ -1,18 +1,31 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useLocale } from "next-intl";
 import { formatDistanceToNow } from "date-fns";
 import { vi as viLocale } from "date-fns/locale";
-import { getAllConversations, type Conversation } from "@/fixtures/conversations";
+import {
+  listConversations,
+  type ConvListItem,
+  type ConvStatus,
+} from "@/lib/api/chat.api";
 
-type FilterType = "open" | "assigned" | "closed" | "all";
+type FilterType = "all" | ConvStatus;
 
 export default function ChatInboxPage() {
   const locale = useLocale();
   const [filter, setFilter] = useState<FilterType>("all");
-  const [conversations] = useState<Conversation[]>(getAllConversations);
+  const [conversations, setConversations] = useState<ConvListItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    listConversations({ limit: 100 })
+      .then((res) => setConversations(res.items))
+      .catch((e) => setError(e.message))
+      .finally(() => setLoading(false));
+  }, []);
 
   const filtered =
     filter === "all"
@@ -38,17 +51,30 @@ export default function ChatInboxPage() {
     },
   ];
 
-  const statusColor = (status: string) => {
+  const statusDot = (status: ConvStatus) => {
     if (status === "open") return "bg-green-500";
     if (status === "assigned") return "bg-blue-500";
     return "bg-muted-foreground";
   };
 
+  if (loading) {
+    return (
+      <div className="flex h-40 items-center justify-center">
+        <div className="h-6 w-6 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
+      {error && (
+        <div className="rounded-lg bg-destructive/10 px-4 py-3 text-sm text-destructive">
+          {error}
+        </div>
+      )}
+
       <h1 className="text-2xl font-bold text-foreground">Hộp thư Chat</h1>
 
-      {/* Filter tabs */}
       <div className="flex gap-2 flex-wrap">
         {filters.map((f) => (
           <button
@@ -68,7 +94,6 @@ export default function ChatInboxPage() {
         ))}
       </div>
 
-      {/* Conversation list */}
       <div className="rounded-xl border border-border overflow-hidden divide-y divide-border">
         {filtered.map((conv) => (
           <Link
@@ -76,17 +101,15 @@ export default function ChatInboxPage() {
             href={`/${locale}/portal/chat/${conv.id}`}
             className="flex items-start gap-4 p-4 hover:bg-muted/30 transition-colors"
           >
-            {/* Avatar */}
             <div className="flex-shrink-0 relative">
               <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-semibold text-sm">
                 {conv.guestName.charAt(0)}
               </div>
               <span
-                className={`absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-background ${statusColor(conv.status)}`}
+                className={`absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-background ${statusDot(conv.status)}`}
               />
             </div>
 
-            {/* Content */}
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between gap-2">
                 <span className="font-medium text-foreground truncate">
@@ -100,11 +123,10 @@ export default function ChatInboxPage() {
                 </span>
               </div>
               <p className="text-sm text-muted-foreground truncate mt-0.5">
-                {conv.lastMessage}
+                {conv.lastMessage ?? "—"}
               </p>
             </div>
 
-            {/* Unread badge */}
             {conv.unread > 0 && (
               <span className="flex-shrink-0 h-5 w-5 rounded-full bg-primary text-xs font-bold text-primary-foreground flex items-center justify-center">
                 {conv.unread}
