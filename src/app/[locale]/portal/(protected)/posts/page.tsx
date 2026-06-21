@@ -26,7 +26,7 @@ export default function PostsListPage() {
   useEffect(() => {
     setLoading(true);
     listPosts({ limit: 100 })
-      .then((res) => setPosts(res.data))
+      .then((res) => setPosts(res.items))
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
   }, []);

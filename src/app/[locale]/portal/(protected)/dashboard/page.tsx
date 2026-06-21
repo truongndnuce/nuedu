@@ -27,7 +27,7 @@ export default function DashboardPage() {
       listPosts({ limit: 1, status: "DRAFT" }),
     ])
       .then(([recent, pub, sched, draft]) => {
-        setRecentPosts(recent.data);
+        setRecentPosts(recent.items ?? []);
         setCounts({
           published: pub.total,
           scheduled: sched.total,

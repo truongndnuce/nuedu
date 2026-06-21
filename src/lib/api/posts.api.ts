@@ -27,7 +27,7 @@ export interface ApiPost {
 }
 
 export interface PostListResponse {
-  data: ApiPost[];
+  items: ApiPost[];
   total: number;
   page: number;
   limit: number;
