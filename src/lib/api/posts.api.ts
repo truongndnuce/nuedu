@@ -108,6 +108,10 @@ export function schedulePost(id: string, scheduledAt: string): Promise<ApiPost> 
   });
 }
 
+export function unschedulePost(id: string): Promise<ApiPost> {
+  return apiFetch(`/posts/${id}/unschedule`, { method: "POST" });
+}
+
 export function statusLabel(status: PostStatus): string {
   if (status === "PUBLISHED") return "Đã đăng";
   if (status === "SCHEDULED") return "Đã lên lịch";

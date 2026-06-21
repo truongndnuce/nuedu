@@ -8,8 +8,9 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { PostEditor } from "@/components/portal/posts/PostEditor";
 import { FeaturedImagePicker, type FeaturedImageResult } from "@/components/portal/posts/FeaturedImagePicker";
+import { SchedulePicker } from "@/components/portal/posts/SchedulePicker";
 import { listCategories, type Category } from "@/lib/api/categories.api";
-import { createPost, publishPost } from "@/lib/api/posts.api";
+import { createPost, publishPost, schedulePost } from "@/lib/api/posts.api";
 import { ArrowLeft } from "lucide-react";
 
 const postSchema = z.object({
@@ -35,6 +36,7 @@ export default function NewPostPage() {
   const [featuredImage, setFeaturedImage] = useState<FeaturedImageResult | undefined>();
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [scheduling, setScheduling] = useState(false);
 
   useEffect(() => {
     listCategories()
@@ -42,40 +44,59 @@ export default function NewPostPage() {
       .catch(() => { /* categories optional */ });
   }, []);
 
-  const {
-    register,
-    handleSubmit,
-    control,
-    formState: { errors },
-  } = useForm<PostFormData>({
+  const form = useForm<PostFormData>({
     resolver: zodResolver(postSchema),
     defaultValues: {
       contentVi: "",
       contentEn: "",
     },
   });
+  const { register, handleSubmit, control, formState: { errors } } = form;
+
+  function buildPostDto(data: PostFormData) {
+    return {
+      titleVi: data.titleVi,
+      titleEn: data.titleEn || data.titleVi,
+      excerptVi: data.excerptVi,
+      excerptEn: data.excerptEn || data.excerptVi,
+      contentVi: data.contentVi,
+      contentEn: data.contentEn || data.contentVi,
+      categoryId: data.categoryId || undefined,
+      featuredImageId: featuredImage?.mediaId,
+      metaTitleVi: data.metaTitleVi,
+      metaDescriptionVi: data.metaDescriptionVi,
+    };
+  }
+
+  async function handleSchedule(isoDate: string) {
+    const isValid = await new Promise<PostFormData | false>((resolve) => {
+      form.handleSubmit(
+        (data) => resolve(data),
+        () => resolve(false),
+      )();
+    });
+    if (!isValid) return;
+    setScheduling(true);
+    setError(null);
+    try {
+      const post = await createPost(buildPostDto(isValid));
+      await schedulePost(post.id, isoDate);
+      router.push(`/${locale}/portal/posts`);
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Lỗi khi lên lịch bài viết");
+    } finally {
+      setScheduling(false);
+    }
+  }
 
   async function onSubmit(data: PostFormData, publish: boolean) {
     setSubmitting(true);
     setError(null);
     try {
-      const post = await createPost({
-        titleVi: data.titleVi,
-        titleEn: data.titleEn || data.titleVi,
-        excerptVi: data.excerptVi,
-        excerptEn: data.excerptEn || data.excerptVi,
-        contentVi: data.contentVi,
-        contentEn: data.contentEn || data.contentVi,
-        categoryId: data.categoryId || undefined,
-        featuredImageId: featuredImage?.mediaId,
-        metaTitleVi: data.metaTitleVi,
-        metaDescriptionVi: data.metaDescriptionVi,
-      });
-
+      const post = await createPost(buildPostDto(data));
       if (publish) {
         await publishPost(post.id);
       }
-
       router.push(`/${locale}/portal/posts`);
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Lỗi khi tạo bài viết");
@@ -209,7 +230,7 @@ export default function NewPostPage() {
               <button
                 type="button"
                 onClick={handleSubmit((d) => onSubmit(d, true))}
-                disabled={submitting}
+                disabled={submitting || scheduling}
                 className="w-full rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-60 transition-colors"
               >
                 {submitting ? "Đang lưu..." : "Đăng ngay"}
@@ -217,11 +238,20 @@ export default function NewPostPage() {
               <button
                 type="button"
                 onClick={handleSubmit((d) => onSubmit(d, false))}
-                disabled={submitting}
+                disabled={submitting || scheduling}
                 className="w-full rounded-lg border border-border px-4 py-2 text-sm font-medium hover:bg-muted transition-colors"
               >
                 Lưu nháp
               </button>
+            </div>
+            <div className="border-t border-border pt-3">
+              <p className="mb-2 text-xs text-muted-foreground">Hoặc lên lịch đăng</p>
+              <SchedulePicker
+                currentStatus="DRAFT"
+                onSchedule={handleSchedule}
+                onUnschedule={async () => {}}
+                disabled={submitting || scheduling}
+              />
             </div>
           </div>
 

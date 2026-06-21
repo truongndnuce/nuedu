@@ -8,12 +8,15 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { PostEditor } from "@/components/portal/posts/PostEditor";
 import { FeaturedImagePicker, type FeaturedImageResult } from "@/components/portal/posts/FeaturedImagePicker";
+import { SchedulePicker } from "@/components/portal/posts/SchedulePicker";
 import { listCategories, type Category } from "@/lib/api/categories.api";
 import {
   getPost,
   updatePost,
   publishPost,
   unpublishPost,
+  schedulePost,
+  unschedulePost,
   type ApiPost,
 } from "@/lib/api/posts.api";
 import { ApiError } from "@/lib/api/client";
@@ -50,6 +53,7 @@ export default function EditPostPage({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [scheduling, setScheduling] = useState(false);
 
   const form = useForm<PostFormData>({
     resolver: zodResolver(postSchema),
@@ -126,6 +130,47 @@ export default function EditPostPage({
       setError(e instanceof Error ? e.message : "Lỗi khi lưu bài viết");
     } finally {
       setSubmitting(false);
+    }
+  }
+
+  async function handleSchedule(isoDate: string) {
+    if (!post) return;
+    setScheduling(true);
+    setError(null);
+    try {
+      const data = form.getValues();
+      await updatePost(id, {
+        titleVi: data.titleVi,
+        titleEn: data.titleEn || data.titleVi,
+        excerptVi: data.excerptVi,
+        excerptEn: data.excerptEn || data.excerptVi,
+        contentVi: data.contentVi,
+        contentEn: data.contentEn || data.contentVi,
+        categoryId: data.categoryId || undefined,
+        featuredImageId: featuredImage?.mediaId || undefined,
+        metaTitleVi: data.metaTitleVi,
+        metaDescriptionVi: data.metaDescriptionVi,
+      });
+      const updated = await schedulePost(id, isoDate);
+      setPost(updated);
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Lỗi khi lên lịch bài viết");
+    } finally {
+      setScheduling(false);
+    }
+  }
+
+  async function handleUnschedule() {
+    if (!post) return;
+    setScheduling(true);
+    setError(null);
+    try {
+      const updated = await unschedulePost(id);
+      setPost(updated);
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Lỗi khi hủy lịch");
+    } finally {
+      setScheduling(false);
     }
   }
 
@@ -263,7 +308,7 @@ export default function EditPostPage({
               <button
                 type="button"
                 onClick={handleSubmit((d) => onSubmit(d, true), (errs) => console.error("Form validation failed:", errs))}
-                disabled={submitting}
+                disabled={submitting || scheduling}
                 className="w-full rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-60 transition-colors"
               >
                 {submitting ? "Đang lưu..." : "Đăng ngay"}
@@ -271,11 +316,21 @@ export default function EditPostPage({
               <button
                 type="button"
                 onClick={handleSubmit((d) => onSubmit(d, false), (errs) => console.error("Form validation failed:", errs))}
-                disabled={submitting}
+                disabled={submitting || scheduling}
                 className="w-full rounded-lg border border-border px-4 py-2 text-sm font-medium hover:bg-muted transition-colors"
               >
                 Lưu nháp
               </button>
+            </div>
+            <div className="border-t border-border pt-3">
+              <p className="mb-2 text-xs text-muted-foreground">Hoặc lên lịch đăng</p>
+              <SchedulePicker
+                currentStatus={post.status}
+                scheduledAt={post.scheduledAt}
+                onSchedule={handleSchedule}
+                onUnschedule={handleUnschedule}
+                disabled={submitting || scheduling}
+              />
             </div>
           </div>
 
