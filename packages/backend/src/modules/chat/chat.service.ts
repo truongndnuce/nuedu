@@ -40,11 +40,38 @@ const CONV_SELECT = {
 
 @Injectable()
 export class ChatService {
+  private readonly typingMap = new Map<string, { staffAt?: number; guestAt?: number }>();
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly broadcast: ChatBroadcastService,
     private readonly audit: AuditService,
   ) {}
+
+  setTyping(conversationId: string, side: 'staff' | 'guest') {
+    const entry = this.typingMap.get(conversationId) ?? {};
+    if (side === 'staff') entry.staffAt = Date.now();
+    else entry.guestAt = Date.now();
+    this.typingMap.set(conversationId, entry);
+  }
+
+  getTyping(conversationId: string) {
+    const entry = this.typingMap.get(conversationId);
+    if (!entry) return { staffTyping: false, guestTyping: false };
+    const now = Date.now();
+    return {
+      staffTyping: !!entry.staffAt && now - entry.staffAt < 4000,
+      guestTyping: !!entry.guestAt && now - entry.guestAt < 4000,
+    };
+  }
+
+  async findActiveGuestConversation(guestSessionId: string): Promise<{ id: string } | null> {
+    return this.prisma.conversation.findFirst({
+      where: { guestSessionId, status: { not: ConversationStatus.CLOSED } },
+      select: { id: true },
+      orderBy: { lastMessageAt: 'desc' },
+    });
+  }
 
   // ─── GUEST ────────────────────────────────────────────────────────────────
 
@@ -83,18 +110,14 @@ export class ChatService {
   }
 
   async getGuestConversation(guestSessionId: string) {
-    let conversation = await this.prisma.conversation.findFirst({
+    const conversation = await this.prisma.conversation.findFirst({
       where: { guestSessionId, status: { not: ConversationStatus.CLOSED } },
       orderBy: { lastMessageAt: 'desc' },
       select: CONV_SELECT,
     });
 
-    if (!conversation) {
-      conversation = await this.prisma.conversation.create({
-        data: { guestSessionId, status: ConversationStatus.OPEN },
-        select: CONV_SELECT,
-      });
-    }
+    // Return null instead of auto-creating — conversation is created on first message send
+    if (!conversation) return null;
 
     const messages = await this.prisma.message.findMany({
       where: { conversationId: conversation.id },
@@ -118,15 +141,34 @@ export class ChatService {
   }
 
   async sendGuestMessage(guestSessionId: string, dto: SendGuestMessageDto) {
-    const conversation = await this.prisma.conversation.findFirst({
-      where: { id: dto.conversationId, guestSessionId },
-    });
-    if (!conversation) throw new ForbiddenException('Conversation not found or access denied');
+    let conversation: { id: string; status: ConversationStatus; assignedStaffId: string | null } | null = null;
 
-    const message = await this.prisma.$transaction(async (tx) => {
+    if (dto.conversationId) {
+      conversation = await this.prisma.conversation.findFirst({
+        where: { id: dto.conversationId, guestSessionId },
+      });
+      if (!conversation) throw new ForbiddenException('Conversation not found or access denied');
+    } else {
+      // Find active conversation or create one on first message
+      conversation = await this.prisma.conversation.findFirst({
+        where: { guestSessionId, status: { not: ConversationStatus.CLOSED } },
+        orderBy: { lastMessageAt: 'desc' },
+      });
+      if (!conversation) {
+        conversation = await this.prisma.conversation.create({
+          data: { guestSessionId, status: ConversationStatus.OPEN },
+        });
+      }
+    }
+
+    // At this point conversation is guaranteed non-null (thrown or assigned above)
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const conv = conversation!;
+
+    const message = await this.prisma.$transaction(async (tx: any) => {
       const msg = await tx.message.create({
         data: {
-          conversationId: conversation.id,
+          conversationId: conv.id,
           senderType: MessageSenderType.GUEST,
           content: dto.content,
           attachments: dto.attachments ? (dto.attachments as any) : undefined,
@@ -135,23 +177,23 @@ export class ChatService {
       });
 
       await tx.conversation.update({
-        where: { id: conversation.id },
+        where: { id: conv.id },
         data: {
           unreadByStaff: { increment: 1 },
           lastMessageAt: new Date(),
-          status: conversation.status === ConversationStatus.CLOSED ? ConversationStatus.OPEN : undefined,
+          status: conv.status === ConversationStatus.CLOSED ? ConversationStatus.OPEN : undefined,
         },
       });
 
       return msg;
     });
 
-    this.broadcast.toConversation(conversation.id, 'message:new', message);
+    this.broadcast.toConversation(conv.id, 'message:new', message);
 
     // Notify staff lobby if conversation was just created (no prior messages)
-    const msgCount = await this.prisma.message.count({ where: { conversationId: conversation.id } });
+    const msgCount = await this.prisma.message.count({ where: { conversationId: conv.id } });
     if (msgCount === 1) {
-      this.broadcast.toStaffLobby('conversation:created', { conversationId: conversation.id, guestSessionId });
+      this.broadcast.toStaffLobby('conversation:created', { conversationId: conv.id, guestSessionId });
     }
 
     return message;
@@ -239,6 +281,12 @@ export class ChatService {
 
     if (conv.status === ConversationStatus.CLOSED) {
       throw new BadRequestException('Conversation is closed');
+    }
+    if (conv.status === ConversationStatus.OPEN) {
+      throw new ForbiddenException('Assign the conversation before replying');
+    }
+    if (conv.assignedStaffId !== userId) {
+      throw new ForbiddenException('Only the assigned staff member can reply');
     }
 
     const message = await this.prisma.$transaction(async (tx) => {

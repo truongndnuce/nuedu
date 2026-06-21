@@ -10,7 +10,7 @@ interface ChatPanelProps {
 }
 
 export function ChatPanel({ onClose }: ChatPanelProps) {
-  const { messages, sendMessage, isTyping, sendError, sending } = useGuestChat();
+  const { messages, sendMessage, notifyTyping, isTyping, sendError, sending } = useGuestChat();
   const [input, setInput] = useState("");
   const endRef = useRef<HTMLDivElement>(null);
 
@@ -19,7 +19,7 @@ export function ChatPanel({ onClose }: ChatPanelProps) {
   }, [messages]);
 
   function handleSend() {
-    if (!input.trim()) return;
+    if (!input.trim() || sending) return;
     sendMessage(input.trim());
     setInput("");
   }
@@ -66,7 +66,7 @@ export function ChatPanel({ onClose }: ChatPanelProps) {
         <div className="flex items-center gap-2">
           <input
             value={input}
-            onChange={(e) => setInput(e.target.value)}
+            onChange={(e) => { setInput(e.target.value); notifyTyping(); }}
             onKeyDown={(e) => e.key === "Enter" && !sending && handleSend()}
             placeholder="Nhập tin nhắn..."
             disabled={sending}

@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, Patch, Post, Req, Res } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, NotFoundException, Patch, Post, Put, Req, Res } from '@nestjs/common';
 import { ApiCookieAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { FastifyReply, FastifyRequest } from 'fastify';
 import { Public } from '@common/decorators/public.decorator';
@@ -50,7 +50,9 @@ export class GuestController {
   @ApiOperation({ summary: 'Get current guest conversation + last 50 messages (F-040)' })
   async getConversation(@Req() req: FastifyRequest) {
     const guestId = this.requireGuestCookie(req);
-    return this.chatService.getGuestConversation(guestId);
+    const result = await this.chatService.getGuestConversation(guestId);
+    if (!result) throw new NotFoundException('No active conversation');
+    return result;
   }
 
   @Post('messages')
@@ -67,6 +69,27 @@ export class GuestController {
   async updateSession(@Body() dto: UpdateGuestSessionDto, @Req() req: FastifyRequest) {
     const guestId = this.requireGuestCookie(req);
     return this.chatService.updateGuestSession(guestId, dto);
+  }
+
+  @Put('typing')
+  @HttpCode(204)
+  @ApiCookieAuth(GUEST_COOKIE)
+  @ApiOperation({ summary: 'Guest is typing indicator' })
+  async setTyping(@Req() req: FastifyRequest) {
+    const guestId = this.requireGuestCookie(req);
+    const conv = await this.chatService.findActiveGuestConversation(guestId);
+    if (conv) this.chatService.setTyping(conv.id, 'guest');
+  }
+
+  @Get('typing')
+  @ApiCookieAuth(GUEST_COOKIE)
+  @ApiOperation({ summary: 'Get staff typing state for guest conversation' })
+  async getTyping(@Req() req: FastifyRequest) {
+    const guestId = this.requireGuestCookie(req);
+    const conv = await this.chatService.findActiveGuestConversation(guestId);
+    if (!conv) return { staffTyping: false };
+    const { staffTyping } = this.chatService.getTyping(conv.id);
+    return { staffTyping };
   }
 
   private requireGuestCookie(req: FastifyRequest): string {

@@ -2,9 +2,10 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsArray, IsOptional, IsString, IsUUID, MinLength } from 'class-validator';
 
 export class SendGuestMessageDto {
-  @ApiProperty()
+  @ApiPropertyOptional()
   @IsUUID()
-  conversationId: string;
+  @IsOptional()
+  conversationId?: string;
 
   @ApiProperty()
   @IsString()

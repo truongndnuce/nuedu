@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, Param, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Param, Post, Put, Query } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
 import { Permissions } from '@common/decorators/permissions.decorator';
@@ -86,6 +86,21 @@ export class StaffController {
   @ApiOperation({ summary: 'Reopen closed conversation (F-047)' })
   reopen(@Param('id') id: string) {
     return this.chatService.reopenConversation(id);
+  }
+
+  @Put(':id/typing')
+  @Permissions('chat.reply')
+  @HttpCode(204)
+  @ApiOperation({ summary: 'Staff is typing indicator' })
+  setTyping(@Param('id') id: string) {
+    this.chatService.setTyping(id, 'staff');
+  }
+
+  @Get(':id/typing')
+  @Permissions('chat.read.all', 'chat.read.assigned')
+  @ApiOperation({ summary: 'Get typing state for conversation' })
+  getTyping(@Param('id') id: string) {
+    return this.chatService.getTyping(id);
   }
 
   @Post(':id/read')

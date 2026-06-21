@@ -1,7 +1,7 @@
 import { apiFetch } from "./client";
 
 export type ConvStatus = "open" | "assigned" | "closed";
-export type MsgSenderType = "guest" | "staff";
+export type MsgSenderType = "guest" | "staff" | "system";
 
 export interface ConvListItem {
   id: string;
@@ -29,7 +29,7 @@ export interface ConvMessage {
 }
 
 type BackendConvStatus = "OPEN" | "ASSIGNED" | "CLOSED";
-type BackendSenderType = "GUEST" | "STAFF";
+type BackendSenderType = "GUEST" | "STAFF" | "SYSTEM";
 
 function mapStatus(s: BackendConvStatus): ConvStatus {
   const map: Record<BackendConvStatus, ConvStatus> = {
@@ -41,7 +41,9 @@ function mapStatus(s: BackendConvStatus): ConvStatus {
 }
 
 function mapSender(s: BackendSenderType): MsgSenderType {
-  return s === "STAFF" ? "staff" : "guest";
+  if (s === "STAFF") return "staff";
+  if (s === "SYSTEM") return "system";
+  return "guest";
 }
 
 function mapConv(raw: {
@@ -134,14 +136,15 @@ export async function getMessages(
   }));
 }
 
-export function sendMessage(
+export async function sendMessage(
   conversationId: string,
   content: string,
-): Promise<void> {
-  return apiFetch(`/chat/conversations/${conversationId}/messages`, {
-    method: "POST",
-    body: JSON.stringify({ content }),
-  });
+): Promise<ConvMessage> {
+  const raw = await apiFetch<{ id: string; senderType: BackendSenderType; content: string; createdAt: string }>(
+    `/chat/conversations/${conversationId}/messages`,
+    { method: "POST", body: JSON.stringify({ content }) },
+  );
+  return { id: raw.id, senderType: mapSender(raw.senderType), content: raw.content, createdAt: raw.createdAt };
 }
 
 export function assignToSelf(conversationId: string): Promise<void> {
@@ -162,6 +165,14 @@ export function markRead(conversationId: string): Promise<void> {
     method: "POST",
     body: JSON.stringify({}),
   });
+}
+
+export function setStaffTyping(conversationId: string): Promise<void> {
+  return apiFetch(`/chat/conversations/${conversationId}/typing`, { method: "PUT" });
+}
+
+export function getConversationTyping(conversationId: string): Promise<{ guestTyping: boolean }> {
+  return apiFetch(`/chat/conversations/${conversationId}/typing`);
 }
 
 // ── Guest API (no JWT, uses nuedu_guest_id cookie) ──────────────────────────
@@ -207,7 +218,8 @@ export async function getGuestConversation(): Promise<GuestConversationData | nu
     const raw = await guestFetch<{
       conversation: { id: string; status: BackendConvStatus };
       messages: { id: string; senderType: BackendSenderType; content: string; createdAt: string }[];
-    }>("/chat/guest/conversation");
+    } | null>("/chat/guest/conversation");
+    if (!raw) return null;
     return {
       id: raw.conversation.id,
       status: mapStatus(raw.conversation.status),
@@ -219,23 +231,34 @@ export async function getGuestConversation(): Promise<GuestConversationData | nu
       })),
     };
   } catch (e) {
-    if (e instanceof Error && e.message.includes("404")) return null;
+    // 404 = no active conversation, not an error
+    if (e instanceof Error && (e.message.includes("404") || e.message.includes("No active conversation"))) return null;
     throw e;
   }
 }
 
-export async function sendGuestMessage(conversationId: string, content: string): Promise<ConvMessage> {
+export async function setGuestTyping(): Promise<void> {
+  await guestFetch("/chat/guest/typing", { method: "PUT" });
+}
+
+export async function getGuestTyping(): Promise<{ staffTyping: boolean }> {
+  return guestFetch("/chat/guest/typing");
+}
+
+export async function sendGuestMessage(content: string, conversationId?: string): Promise<ConvMessage & { conversationId: string }> {
   const raw = await guestFetch<{
     id: string;
+    conversationId: string;
     senderType: BackendSenderType;
     content: string;
     createdAt: string;
   }>("/chat/guest/messages", {
     method: "POST",
-    body: JSON.stringify({ conversationId, content }),
+    body: JSON.stringify({ content, ...(conversationId ? { conversationId } : {}) }),
   });
   return {
     id: raw.id,
+    conversationId: raw.conversationId,
     senderType: mapSender(raw.senderType),
     content: raw.content,
     createdAt: raw.createdAt,
