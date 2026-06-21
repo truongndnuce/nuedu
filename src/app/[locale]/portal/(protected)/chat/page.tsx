@@ -13,6 +13,30 @@ import {
 
 type FilterType = "all" | ConvStatus;
 
+const AVATAR_COLORS = [
+  "bg-red-400 text-white",
+  "bg-orange-400 text-white",
+  "bg-amber-500 text-white",
+  "bg-lime-500 text-white",
+  "bg-emerald-500 text-white",
+  "bg-teal-500 text-white",
+  "bg-cyan-500 text-white",
+  "bg-blue-500 text-white",
+  "bg-violet-500 text-white",
+  "bg-pink-500 text-white",
+];
+
+function avatarColor(id: string): string {
+  const n = id.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0);
+  return AVATAR_COLORS[n % AVATAR_COLORS.length];
+}
+
+function guestLabel(conv: ConvListItem): string {
+  if (conv.guestName !== "Guest") return conv.guestName;
+  const n = conv.id.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0) % 999 + 1;
+  return `Guest ${n}`;
+}
+
 export default function ChatInboxPage() {
   const locale = useLocale();
   const [filter, setFilter] = useState<FilterType>("all");
@@ -21,10 +45,14 @@ export default function ChatInboxPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    listConversations({ limit: 100 })
-      .then((res) => setConversations(res.items))
-      .catch((e) => setError(e.message))
-      .finally(() => setLoading(false));
+    const load = () =>
+      listConversations({ limit: 100 })
+        .then((res) => setConversations(res.items))
+        .catch((e) => setError(e.message))
+        .finally(() => setLoading(false));
+    load();
+    const t = setInterval(load, 10_000);
+    return () => clearInterval(t);
   }, []);
 
   const filtered =
@@ -102,8 +130,8 @@ export default function ChatInboxPage() {
             className="flex items-start gap-4 p-4 hover:bg-muted/30 transition-colors"
           >
             <div className="flex-shrink-0 relative">
-              <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-semibold text-sm">
-                {conv.guestName.charAt(0)}
+              <div className={`h-10 w-10 rounded-full flex items-center justify-center font-semibold text-sm ${avatarColor(conv.id)}`}>
+                {guestLabel(conv).charAt(0).toUpperCase()}
               </div>
               <span
                 className={`absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-background ${statusDot(conv.status)}`}
@@ -113,7 +141,7 @@ export default function ChatInboxPage() {
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between gap-2">
                 <span className="font-medium text-foreground truncate">
-                  {conv.guestName}
+                  {guestLabel(conv)}
                 </span>
                 <span className="text-xs text-muted-foreground whitespace-nowrap">
                   {formatDistanceToNow(new Date(conv.createdAt), {

@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Underline from "@tiptap/extension-underline";
@@ -42,6 +43,16 @@ export function PostEditor({ content, onChange, placeholder }: PostEditorProps) 
     },
     immediatelyRender: false,
   });
+
+  // Sync content from props once after initial load (e.g. when edit page fetches post data)
+  const synced = useRef(false);
+  useEffect(() => {
+    if (!editor || synced.current) return;
+    if (content && content !== "<p></p>") {
+      editor.commands.setContent(content, false);
+      synced.current = true;
+    }
+  }, [editor, content]);
 
   if (!editor) return null;
 

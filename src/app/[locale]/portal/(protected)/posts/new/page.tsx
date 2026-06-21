@@ -7,7 +7,7 @@ import { useForm, Controller } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { PostEditor } from "@/components/portal/posts/PostEditor";
-import { FeaturedImagePicker } from "@/components/portal/posts/FeaturedImagePicker";
+import { FeaturedImagePicker, type FeaturedImageResult } from "@/components/portal/posts/FeaturedImagePicker";
 import { listCategories, type Category } from "@/lib/api/categories.api";
 import { createPost, publishPost } from "@/lib/api/posts.api";
 import { ArrowLeft } from "lucide-react";
@@ -32,6 +32,7 @@ export default function NewPostPage() {
   const [activeTab, setActiveTab] = useState<"vi" | "en">("vi");
   const [seoOpen, setSeoOpen] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [featuredImage, setFeaturedImage] = useState<FeaturedImageResult | undefined>();
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -64,8 +65,9 @@ export default function NewPostPage() {
         excerptVi: data.excerptVi,
         excerptEn: data.excerptEn || data.excerptVi,
         contentVi: data.contentVi,
-        contentEn: data.contentEn,
+        contentEn: data.contentEn || data.contentVi,
         categoryId: data.categoryId || undefined,
+        featuredImageId: featuredImage?.mediaId,
         metaTitleVi: data.metaTitleVi,
         metaDescriptionVi: data.metaDescriptionVi,
       });
@@ -242,10 +244,10 @@ export default function NewPostPage() {
             <h3 className="text-sm font-semibold text-foreground">
               Ảnh đại diện
             </h3>
-            <FeaturedImagePicker value={undefined} onChange={() => {}} />
-            <p className="text-xs text-muted-foreground">
-              Tích hợp Cloudinary sẽ được bổ sung sau
-            </p>
+            <FeaturedImagePicker
+              previewUrl={featuredImage?.url}
+              onChange={setFeaturedImage}
+            />
           </div>
         </div>
       </div>

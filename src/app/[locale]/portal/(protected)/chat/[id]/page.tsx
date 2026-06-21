@@ -48,6 +48,22 @@ export default function ConversationPage({
       .finally(() => setLoading(false));
   }, [id]);
 
+  // Poll for new messages every 5 s (starts after initial load)
+  useEffect(() => {
+    if (loading) return;
+    const t = setInterval(() => {
+      getMessages(id).then((msgs) =>
+        setMessages((prev) => {
+          const ids = new Set(prev.map((m) => m.id));
+          const fresh = msgs.filter((m) => !ids.has(m.id));
+          return fresh.length ? [...prev, ...fresh] : prev;
+        })
+      ).catch(() => { /* ignore polling errors */ });
+    }, 5_000);
+    return () => clearInterval(t);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, loading]);
+
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
@@ -96,6 +112,29 @@ export default function ConversationPage({
 
   const dateLocale = locale === "vi" ? viLocale : undefined;
 
+  const AVATAR_COLORS = [
+    "bg-red-400",
+    "bg-orange-400",
+    "bg-amber-500",
+    "bg-lime-500",
+    "bg-emerald-500",
+    "bg-teal-500",
+    "bg-cyan-500",
+    "bg-blue-500",
+    "bg-violet-500",
+    "bg-pink-500",
+  ];
+
+  function avatarColor(convId: string): string {
+    const n = convId.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0);
+    return AVATAR_COLORS[n % AVATAR_COLORS.length];
+  }
+
+  const guestDisplayName =
+    conv?.guestName === "Guest"
+      ? `Guest ${(id.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0) % 999) + 1}`
+      : (conv?.guestName ?? "Guest");
+
   if (loading) {
     return (
       <div className="flex h-full items-center justify-center">
@@ -121,8 +160,11 @@ export default function ConversationPage({
         >
           <ArrowLeft size={18} />
         </button>
+        <div className={`h-9 w-9 rounded-full flex items-center justify-center text-white font-semibold text-sm flex-shrink-0 ${avatarColor(id)}`}>
+          {guestDisplayName.charAt(0).toUpperCase()}
+        </div>
         <div className="flex-1">
-          <h2 className="font-semibold text-foreground">{conv.guestName}</h2>
+          <h2 className="font-semibold text-foreground">{guestDisplayName}</h2>
           {conv.guestPhone && (
             <p className="text-xs text-muted-foreground">{conv.guestPhone}</p>
           )}

@@ -49,12 +49,12 @@ function mapConv(raw: {
   status: BackendConvStatus;
   unreadByStaff: number;
   createdAt: string;
-  guestSession: { displayName: string; phone?: string | null };
+  guestSession: { displayName: string | null; phone?: string | null };
   messages?: { content: string }[];
 }): ConvListItem {
   return {
     id: raw.id,
-    guestName: raw.guestSession.displayName,
+    guestName: raw.guestSession.displayName ?? "Guest",
     guestPhone: raw.guestSession.phone ?? undefined,
     status: mapStatus(raw.status),
     unread: raw.unreadByStaff,
@@ -162,4 +162,82 @@ export function markRead(conversationId: string): Promise<void> {
     method: "POST",
     body: JSON.stringify({}),
   });
+}
+
+// ── Guest API (no JWT, uses nuedu_guest_id cookie) ──────────────────────────
+
+const GUEST_BASE =
+  process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000/api/v1";
+
+async function guestFetch<T>(path: string, init: RequestInit = {}): Promise<T> {
+  const res = await fetch(`${GUEST_BASE}${path}`, {
+    ...init,
+    credentials: "include",
+    headers: { "Content-Type": "application/json", ...init.headers },
+  });
+  if (!res.ok) {
+    let msg = `HTTP ${res.status}`;
+    try { const b = await res.json(); msg = b.message ?? msg; } catch { /* ignore */ }
+    throw new Error(msg);
+  }
+  if (res.status === 204) return undefined as T;
+  return res.json() as T;
+}
+
+export interface GuestSessionInfo {
+  id: string;
+  displayName: string;
+}
+
+export async function initGuestSession(): Promise<GuestSessionInfo> {
+  return guestFetch<GuestSessionInfo>("/chat/guest/session", {
+    method: "POST",
+    body: JSON.stringify({}),
+  });
+}
+
+export interface GuestConversationData {
+  id: string;
+  status: ConvStatus;
+  messages: ConvMessage[];
+}
+
+export async function getGuestConversation(): Promise<GuestConversationData | null> {
+  try {
+    const raw = await guestFetch<{
+      conversation: { id: string; status: BackendConvStatus };
+      messages: { id: string; senderType: BackendSenderType; content: string; createdAt: string }[];
+    }>("/chat/guest/conversation");
+    return {
+      id: raw.conversation.id,
+      status: mapStatus(raw.conversation.status),
+      messages: raw.messages.map((m) => ({
+        id: m.id,
+        senderType: mapSender(m.senderType),
+        content: m.content,
+        createdAt: m.createdAt,
+      })),
+    };
+  } catch (e) {
+    if (e instanceof Error && e.message.includes("404")) return null;
+    throw e;
+  }
+}
+
+export async function sendGuestMessage(conversationId: string, content: string): Promise<ConvMessage> {
+  const raw = await guestFetch<{
+    id: string;
+    senderType: BackendSenderType;
+    content: string;
+    createdAt: string;
+  }>("/chat/guest/messages", {
+    method: "POST",
+    body: JSON.stringify({ conversationId, content }),
+  });
+  return {
+    id: raw.id,
+    senderType: mapSender(raw.senderType),
+    content: raw.content,
+    createdAt: raw.createdAt,
+  };
 }

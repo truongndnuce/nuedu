@@ -60,6 +60,7 @@ export function createPost(dto: {
   contentEn?: string;
   categoryId?: string;
   tagIds?: string[];
+  featuredImageId?: string;
   metaTitleVi?: string;
   metaTitleEn?: string;
   metaDescriptionVi?: string;
@@ -78,6 +79,7 @@ export function updatePost(
     contentVi?: string;
     contentEn?: string;
     categoryId?: string;
+    featuredImageId?: string;
     metaTitleVi?: string;
     metaTitleEn?: string;
     metaDescriptionVi?: string;

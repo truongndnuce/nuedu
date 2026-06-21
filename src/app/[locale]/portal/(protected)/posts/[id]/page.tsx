@@ -7,7 +7,7 @@ import { useForm, Controller } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { PostEditor } from "@/components/portal/posts/PostEditor";
-import { FeaturedImagePicker } from "@/components/portal/posts/FeaturedImagePicker";
+import { FeaturedImagePicker, type FeaturedImageResult } from "@/components/portal/posts/FeaturedImagePicker";
 import { listCategories, type Category } from "@/lib/api/categories.api";
 import {
   getPost,
@@ -46,12 +46,24 @@ export default function EditPostPage({
   const [seoOpen, setSeoOpen] = useState(false);
   const [post, setPost] = useState<ApiPost | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [featuredImage, setFeaturedImage] = useState<FeaturedImageResult | undefined>();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   const form = useForm<PostFormData>({
     resolver: zodResolver(postSchema),
+    defaultValues: {
+      titleVi: "",
+      titleEn: "",
+      contentVi: "",
+      contentEn: "",
+      excerptVi: "",
+      excerptEn: "",
+      categoryId: "",
+      metaTitleVi: "",
+      metaDescriptionVi: "",
+    },
   });
 
   useEffect(() => {
@@ -59,25 +71,29 @@ export default function EditPostPage({
       .then(([p, cats]) => {
         setPost(p);
         setCategories(cats);
+        if (p.featuredImage) {
+          setFeaturedImage({ mediaId: p.featuredImage.id, url: p.featuredImage.cloudinaryUrl });
+        }
         form.reset({
           titleVi: p.titleVi,
-          titleEn: p.titleEn,
+          titleEn: p.titleEn ?? "",
           contentVi: p.contentVi ?? "",
           contentEn: p.contentEn ?? "",
-          excerptVi: p.excerptVi,
-          excerptEn: p.excerptEn,
+          excerptVi: p.excerptVi ?? "",
+          excerptEn: p.excerptEn ?? "",
           categoryId: p.category?.id ?? "",
-          metaTitleVi: p.metaTitleVi,
-          metaDescriptionVi: p.metaDescriptionVi,
+          metaTitleVi: p.metaTitleVi ?? "",
+          metaDescriptionVi: p.metaDescriptionVi ?? "",
         });
+        setLoading(false);
       })
       .catch((e) => {
         if (e instanceof ApiError && e.status === 404) {
           notFound();
         }
         setError(e.message);
-      })
-      .finally(() => setLoading(false));
+        setLoading(false);
+      });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
@@ -92,15 +108,16 @@ export default function EditPostPage({
         excerptVi: data.excerptVi,
         excerptEn: data.excerptEn || data.excerptVi,
         contentVi: data.contentVi,
-        contentEn: data.contentEn,
+        contentEn: data.contentEn || data.contentVi,
         categoryId: data.categoryId || undefined,
+        featuredImageId: featuredImage?.mediaId || undefined,
         metaTitleVi: data.metaTitleVi,
         metaDescriptionVi: data.metaDescriptionVi,
       });
 
-      if (publish && post.status !== "PUBLISHED") {
+      if (publish) {
         await publishPost(id);
-      } else if (!publish && post.status === "PUBLISHED") {
+      } else if (post.status === "PUBLISHED") {
         await unpublishPost(id);
       }
 
@@ -122,7 +139,7 @@ export default function EditPostPage({
 
   if (!post) return null;
 
-  const { register, handleSubmit, control } = form;
+  const { register, handleSubmit, control, formState: { errors } } = form;
 
   return (
     <div className="space-y-6">
@@ -169,6 +186,9 @@ export default function EditPostPage({
                 placeholder="Tiêu đề (tiếng Việt)"
                 className="w-full rounded-lg border border-input bg-background px-4 py-3 text-lg font-semibold placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
               />
+              {errors.titleVi && (
+                <p className="text-xs text-destructive">Tiêu đề tiếng Việt bắt buộc</p>
+              )}
               <input
                 {...register("excerptVi")}
                 placeholder="Mô tả ngắn..."
@@ -242,7 +262,7 @@ export default function EditPostPage({
             <div className="flex flex-col gap-2">
               <button
                 type="button"
-                onClick={handleSubmit((d) => onSubmit(d, true))}
+                onClick={handleSubmit((d) => onSubmit(d, true), (errs) => console.error("Form validation failed:", errs))}
                 disabled={submitting}
                 className="w-full rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-60 transition-colors"
               >
@@ -250,7 +270,7 @@ export default function EditPostPage({
               </button>
               <button
                 type="button"
-                onClick={handleSubmit((d) => onSubmit(d, false))}
+                onClick={handleSubmit((d) => onSubmit(d, false), (errs) => console.error("Form validation failed:", errs))}
                 disabled={submitting}
                 className="w-full rounded-lg border border-border px-4 py-2 text-sm font-medium hover:bg-muted transition-colors"
               >
@@ -279,14 +299,9 @@ export default function EditPostPage({
               Ảnh đại diện
             </h3>
             <FeaturedImagePicker
-              value={post.featuredImage?.cloudinaryUrl}
-              onChange={() => {}}
+              previewUrl={featuredImage?.url}
+              onChange={setFeaturedImage}
             />
-            {post.featuredImage && (
-              <p className="text-xs text-muted-foreground">
-                Thay đổi ảnh sẽ được bổ sung sau
-              </p>
-            )}
           </div>
         </div>
       </div>

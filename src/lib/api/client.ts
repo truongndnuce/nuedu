@@ -19,7 +19,7 @@ export async function apiFetch<T>(
 ): Promise<T> {
   const buildHeaders = (token: string | null): Record<string, string> => {
     const h: Record<string, string> = {};
-    if (!(init.body instanceof FormData)) {
+    if (init.body && !(init.body instanceof FormData)) {
       h["Content-Type"] = "application/json";
     }
     if (token) h["Authorization"] = `Bearer ${token}`;

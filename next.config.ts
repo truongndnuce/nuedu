@@ -11,8 +11,7 @@ const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "cdn.nuedu.vn" },
-      // MinIO (local dev — add after setup)
-      // { protocol: "http", hostname: "localhost", port: "9000" },
+      { protocol: "https", hostname: "res.cloudinary.com" },
     ],
   },
 };
