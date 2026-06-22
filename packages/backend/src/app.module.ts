@@ -21,6 +21,7 @@ import { RevalidationModule } from './modules/revalidation/revalidation.module';
 import { AppSchedulerModule } from './modules/scheduler/scheduler.module';
 import { TagsModule } from './modules/tags/tags.module';
 import { RolesModule } from './modules/roles/roles.module';
+import { TrainersModule } from './modules/trainers/trainers.module';
 import { UsersModule } from './modules/users/users.module';
 
 @Module({
@@ -49,6 +50,7 @@ import { UsersModule } from './modules/users/users.module';
     CategoriesModule,
     TagsModule,
     PostsModule,
+    TrainersModule,
     PublicModule,
     ChatModule,
     HealthModule,

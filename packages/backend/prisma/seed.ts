@@ -31,6 +31,8 @@ const PERMISSIONS = [
   { key: 'users.update', group: 'users', description: 'Edit staff info' },
   { key: 'users.delete', group: 'users', description: 'Deactivate staff' },
   { key: 'permissions.assign', group: 'users', description: 'Grant/revoke per-user permissions' },
+  // trainers
+  { key: 'trainers.manage', group: 'trainers', description: 'CRUD trainers' },
   // roles
   { key: 'roles.manage', group: 'roles', description: 'Quản lý vai trò tùy chỉnh' },
   // audit

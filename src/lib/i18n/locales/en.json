@@ -120,6 +120,23 @@
       "activate": "Activate",
       "deactivate": "Deactivate"
     },
+    "trainers": {
+      "title": "Trainers",
+      "add": "Add trainer",
+      "editTitle": "Edit trainer",
+      "createTitle": "Add new trainer",
+      "nameVi": "Name (Vietnamese)",
+      "nameEn": "Name (English)",
+      "titleVi": "Title (VI)",
+      "titleEn": "Title (EN)",
+      "bioVi": "Bio (VI)",
+      "bioEn": "Bio (EN)",
+      "avatar": "Avatar URL",
+      "specialties": "Specialties (comma-separated)",
+      "order": "Order",
+      "isActive": "Visible",
+      "empty": "No trainers yet"
+    },
     "login": {
       "title": "Sign in",
       "email": "Email",

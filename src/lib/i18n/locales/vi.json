@@ -120,6 +120,23 @@
       "activate": "Kích hoạt",
       "deactivate": "Vô hiệu hóa"
     },
+    "trainers": {
+      "title": "Giảng viên",
+      "add": "Thêm giảng viên",
+      "editTitle": "Sửa giảng viên",
+      "createTitle": "Thêm giảng viên mới",
+      "nameVi": "Tên (Tiếng Việt)",
+      "nameEn": "Name (English)",
+      "titleVi": "Chức danh (VI)",
+      "titleEn": "Title (EN)",
+      "bioVi": "Bio (VI)",
+      "bioEn": "Bio (EN)",
+      "avatar": "URL ảnh đại diện",
+      "specialties": "Chuyên môn (cách nhau bởi dấu phẩy)",
+      "order": "Thứ tự",
+      "isActive": "Hiển thị",
+      "empty": "Chưa có giảng viên nào"
+    },
     "login": {
       "title": "Đăng nhập",
       "email": "Email",

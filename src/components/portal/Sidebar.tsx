@@ -13,6 +13,7 @@ import {
   Users,
   ShieldCheck,
   Settings,
+  UserCheck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { PermissionGate } from "./PermissionGate";
@@ -67,6 +68,22 @@ export function Sidebar() {
             {label}
           </Link>
         ))}
+
+        {/* Permission-gated: Trainers */}
+        <PermissionGate need="trainers.manage">
+          <Link
+            href={`/${locale}/portal/trainers`}
+            className={cn(
+              "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+              pathname.startsWith(`/${locale}/portal/trainers`)
+                ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                : "text-sidebar-foreground/70 hover:bg-sidebar-accent/60 hover:text-sidebar-foreground"
+            )}
+          >
+            <UserCheck size={16} />
+            Giảng viên
+          </Link>
+        </PermissionGate>
 
         {/* Admin-only: Users */}
         <PermissionGate need="users.read">

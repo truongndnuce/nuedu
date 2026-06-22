@@ -279,6 +279,24 @@ model Message {
   @@index([conversationId, createdAt])
 }
 
+// ===== TRAINERS =====
+
+model Trainer {
+  id          String   @id @default(uuid())
+  nameVi      String
+  nameEn      String
+  titleVi     String
+  titleEn     String
+  bioVi       String   @db.Text
+  bioEn       String   @db.Text
+  avatar      String
+  specialties Json
+  order       Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
 // ===== AUDIT =====
 
 model AuditLog {
