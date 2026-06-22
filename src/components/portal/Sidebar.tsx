@@ -11,6 +11,8 @@ import {
   Tag,
   FolderOpen,
   Users,
+  ShieldCheck,
+  Settings,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { PermissionGate } from "./PermissionGate";
@@ -66,8 +68,8 @@ export function Sidebar() {
           </Link>
         ))}
 
-        {/* Admin-only */}
-        <PermissionGate need="users.manage">
+        {/* Admin-only: Users */}
+        <PermissionGate need="users.read">
           <Link
             href={`/${locale}/portal/users`}
             className={cn(
@@ -81,6 +83,38 @@ export function Sidebar() {
             Người dùng
           </Link>
         </PermissionGate>
+
+        {/* Admin-only: Roles */}
+        <PermissionGate need="roles.manage">
+          <Link
+            href={`/${locale}/portal/roles`}
+            className={cn(
+              "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+              pathname.startsWith(`/${locale}/portal/roles`)
+                ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                : "text-sidebar-foreground/70 hover:bg-sidebar-accent/60 hover:text-sidebar-foreground"
+            )}
+          >
+            <ShieldCheck size={16} />
+            Vai trò
+          </Link>
+        </PermissionGate>
+
+        {/* Always visible: Account settings */}
+        <div className="mt-2 border-t border-sidebar-border pt-2">
+          <Link
+            href={`/${locale}/portal/account`}
+            className={cn(
+              "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+              pathname.startsWith(`/${locale}/portal/account`)
+                ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                : "text-sidebar-foreground/70 hover:bg-sidebar-accent/60 hover:text-sidebar-foreground"
+            )}
+          >
+            <Settings size={16} />
+            Cài đặt tài khoản
+          </Link>
+        </div>
       </nav>
     </aside>
   );

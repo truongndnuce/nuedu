@@ -5,12 +5,13 @@ import {
   IsEnum,
   IsOptional,
   IsString,
+  IsUUID,
   IsUrl,
   MinLength,
 } from 'class-validator';
 
 export class CreateUserDto {
-  @ApiProperty({ example: 'staff@nuedu.vn' })
+  @ApiProperty({ example: 'staff@example.com' })
   @IsEmail()
   email: string;
 
@@ -25,7 +26,7 @@ export class CreateUserDto {
 
   @ApiPropertyOptional({ example: 'Password@123' })
   @IsString()
-  @MinLength(10)
+  @MinLength(8)
   @IsOptional()
   password?: string;
 
@@ -33,4 +34,9 @@ export class CreateUserDto {
   @IsUrl()
   @IsOptional()
   avatarUrl?: string;
+
+  @ApiPropertyOptional({ description: 'Custom role ID to assign to the user' })
+  @IsUUID()
+  @IsOptional()
+  customRoleId?: string;
 }

@@ -30,18 +30,23 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
     if (!user) throw new UnauthorizedException();
 
-    // Resolve effective permissions
-    const rolePerms = await this.prisma.rolePermission.findMany({
-      where: { role: user.role },
-      include: { permission: true },
-    });
+    // Resolve base permissions: custom role takes precedence over system role defaults
+    const basePerms = user.customRoleId
+      ? await this.prisma.customRolePermission.findMany({
+          where: { customRoleId: user.customRoleId },
+          include: { permission: true },
+        }).then((perms) => perms.map((p) => p.permission.key))
+      : await this.prisma.rolePermission.findMany({
+          where: { role: user.role },
+          include: { permission: true },
+        }).then((perms) => perms.map((rp) => rp.permission.key));
 
     const userPerms = await this.prisma.userPermission.findMany({
       where: { userId: user.id },
       include: { permission: true },
     });
 
-    const granted = new Set(rolePerms.map((rp) => rp.permission.key));
+    const granted = new Set(basePerms);
 
     for (const up of userPerms) {
       if (up.granted) {
@@ -57,6 +62,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       fullName: user.fullName,
       avatarUrl: user.avatarUrl,
       role: user.role,
+      customRoleId: user.customRoleId,
       isActive: user.isActive,
       effectivePermissions: Array.from(granted),
     };

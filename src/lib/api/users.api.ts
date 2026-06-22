@@ -8,6 +8,7 @@ export interface ApiUser {
   fullName: string;
   avatarUrl?: string;
   role: UserRole;
+  customRoleId?: string | null;
   isActive: boolean;
   lastLoginAt?: string;
   createdAt: string;
@@ -31,6 +32,23 @@ export interface PermissionDef {
   key: string;
   group: string;
   description?: string;
+}
+
+export function createUser(dto: {
+  fullName: string;
+  email: string;
+  role?: UserRole;
+  customRoleId?: string;
+}): Promise<ApiUser & { temporaryPassword?: string }> {
+  return apiFetch("/users", { method: "POST", body: JSON.stringify(dto) });
+}
+
+export function updateSelfProfile(dto: {
+  fullName?: string;
+  currentPassword?: string;
+  newPassword?: string;
+}): Promise<void> {
+  return apiFetch("/auth/me", { method: "PATCH", body: JSON.stringify(dto) });
 }
 
 export function listUsers(params?: {

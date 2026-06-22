@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -21,6 +22,7 @@ export class AuthService {
   async login(dto: LoginDto, ip?: string, userAgent?: string) {
     const user = await this.prisma.user.findUnique({
       where: { email: dto.email, isActive: true },
+      select: { id: true, email: true, fullName: true, avatarUrl: true, role: true, customRoleId: true, passwordHash: true, isActive: true },
     });
 
     if (!user) throw new UnauthorizedException('Invalid credentials');
@@ -36,7 +38,7 @@ export class AuthService {
     const accessToken = await this.generateAccessToken(user.id, user.role);
     const refreshToken = await this.createRefreshToken(user.id, ip, userAgent);
 
-    const permissions = await this.getEffectivePermissions(user.id, user.role);
+    const permissions = await this.getEffectivePermissions(user.id, user.role, user.customRoleId ?? undefined);
 
     return {
       accessToken,
@@ -47,6 +49,7 @@ export class AuthService {
         fullName: user.fullName,
         avatarUrl: user.avatarUrl,
         role: user.role,
+        customRoleId: user.customRoleId,
         permissions,
       },
     };
@@ -102,14 +105,36 @@ export class AuthService {
         fullName: true,
         avatarUrl: true,
         role: true,
+        customRoleId: true,
         lastLoginAt: true,
         createdAt: true,
       },
     });
 
-    const permissions = await this.getEffectivePermissions(userId, user.role);
+    const permissions = await this.getEffectivePermissions(userId, user.role, user.customRoleId ?? undefined);
 
     return { ...user, permissions };
+  }
+
+  async updateProfile(userId: string, dto: { fullName?: string; currentPassword?: string; newPassword?: string }) {
+    const user = await this.prisma.user.findUniqueOrThrow({ where: { id: userId } });
+
+    const data: Record<string, unknown> = {};
+
+    if (dto.fullName) {
+      data.fullName = dto.fullName;
+    }
+
+    if (dto.newPassword) {
+      if (!dto.currentPassword) throw new BadRequestException('currentPassword is required');
+      const valid = await argon2.verify(user.passwordHash, dto.currentPassword);
+      if (!valid) throw new BadRequestException('Current password is incorrect');
+      data.passwordHash = await argon2.hash(dto.newPassword, { memoryCost: 19456, timeCost: 2, parallelism: 1 });
+    }
+
+    if (Object.keys(data).length === 0) return;
+
+    await this.prisma.user.update({ where: { id: userId }, data });
   }
 
   private async generateAccessToken(userId: string, role: UserRole) {
@@ -144,19 +169,24 @@ export class AuthService {
     return crypto.createHash('sha256').update(raw).digest('hex');
   }
 
-  private async getEffectivePermissions(userId: string, role: UserRole): Promise<string[]> {
-    const [rolePerms, userPerms] = await Promise.all([
-      this.prisma.rolePermission.findMany({
-        where: { role },
-        include: { permission: true },
-      }),
+  private async getEffectivePermissions(userId: string, role: UserRole, customRoleId?: string): Promise<string[]> {
+    const [basePerms, userPerms] = await Promise.all([
+      customRoleId
+        ? this.prisma.customRolePermission.findMany({
+            where: { customRoleId },
+            include: { permission: true },
+          }).then((perms) => perms.map((p) => p.permission.key))
+        : this.prisma.rolePermission.findMany({
+            where: { role },
+            include: { permission: true },
+          }).then((perms) => perms.map((rp) => rp.permission.key)),
       this.prisma.userPermission.findMany({
         where: { userId },
         include: { permission: true },
       }),
     ]);
 
-    const granted = new Set(rolePerms.map((rp) => rp.permission.key));
+    const granted = new Set(basePerms);
 
     for (const up of userPerms) {
       if (up.granted) {

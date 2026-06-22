@@ -21,6 +21,8 @@ model User {
   fullName     String
   avatarUrl    String?
   role         UserRole  @default(STAFF)
+  customRoleId String?
+  customRole   CustomRole? @relation(fields: [customRoleId], references: [id])
   isActive     Boolean   @default(true)
   lastLoginAt  DateTime?
   createdAt    DateTime  @default(now())
@@ -38,14 +40,35 @@ model User {
   @@index([email])
 }
 
+model CustomRole {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  permissions CustomRolePermission[]
+  users       User[]
+}
+
+model CustomRolePermission {
+  customRoleId String
+  permissionId String
+  customRole   CustomRole @relation(fields: [customRoleId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([customRoleId, permissionId])
+}
+
 model Permission {
   id          String   @id @default(uuid())
   key         String   @unique
   group       String
   description String?
 
-  rolePerms RolePermission[]
-  userPerms UserPermission[]
+  rolePerms       RolePermission[]
+  userPerms       UserPermission[]
+  customRolePerms CustomRolePermission[]
 }
 
 model RolePermission {

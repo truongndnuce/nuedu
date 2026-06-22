@@ -28,11 +28,13 @@ const PERMISSIONS = [
   // users
   { key: 'users.create', group: 'users', description: 'Create staff accounts' },
   { key: 'users.read', group: 'users', description: 'List staff' },
-  // audit
-  { key: 'audit.read', group: 'audit', description: 'Read audit logs (admin only)' },
   { key: 'users.update', group: 'users', description: 'Edit staff info' },
   { key: 'users.delete', group: 'users', description: 'Deactivate staff' },
   { key: 'permissions.assign', group: 'users', description: 'Grant/revoke per-user permissions' },
+  // roles
+  { key: 'roles.manage', group: 'roles', description: 'Quản lý vai trò tùy chỉnh' },
+  // audit
+  { key: 'audit.read', group: 'audit', description: 'Read audit logs (admin only)' },
 ];
 
 const STAFF_DEFAULT_PERMISSIONS = [

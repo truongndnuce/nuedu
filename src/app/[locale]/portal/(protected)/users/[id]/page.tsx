@@ -16,6 +16,7 @@ import {
   type PermissionDef,
   type UserPermissions,
 } from "@/lib/api/users.api";
+import { listRoles, type ApiCustomRole } from "@/lib/api/roles.api";
 
 function groupByGroup(perms: PermissionDef[]): Record<string, PermissionDef[]> {
   const groups: Record<string, PermissionDef[]> = {};
@@ -42,6 +43,7 @@ export default function EditUserPage({
     ADMIN: [],
     STAFF: [],
   });
+  const [customRoles, setCustomRoles] = useState<ApiCustomRole[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -53,6 +55,7 @@ export default function EditUserPage({
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<UserRole>("STAFF");
+  const [customRoleId, setCustomRoleId] = useState<string>("");
 
   useEffect(() => {
     Promise.all([
@@ -60,15 +63,18 @@ export default function EditUserPage({
       getUserPermissions(id),
       listAllPermissions(),
       getRoleDefaults(),
+      listRoles(),
     ])
-      .then(([u, permsData, allP, roleDefs]) => {
+      .then(([u, permsData, allP, roleDefs, roles]) => {
         setUser(u);
         setFullName(u.fullName);
         setEmail(u.email);
         setRole(u.role);
+        setCustomRoleId(u.customRoleId ?? "");
         setEffectivePerms(permsData.effective);
         setAllPerms(allP);
         setRoleDefaults(roleDefs as Record<UserRole, string[]>);
+        setCustomRoles(roles);
       })
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
@@ -88,7 +94,12 @@ export default function EditUserPage({
     if (!user) return;
     setSaving(true);
     try {
-      const updated = await updateUser(id, { fullName, email, role });
+      const updated = await updateUser(id, {
+        fullName,
+        email,
+        role,
+        customRoleId: customRoleId || null,
+      });
       setUser(updated);
       // Reset permissions to new role defaults when role changes
       if (updated.role !== user.role) {
@@ -211,17 +222,41 @@ export default function EditUserPage({
           </div>
           <div>
             <label className="block text-sm font-medium text-foreground mb-1.5">
-              Vai trò
+              Cấp độ hệ thống
             </label>
             <select
               value={role}
-              onChange={(e) => setRole(e.target.value as UserRole)}
+              onChange={(e) => {
+                setRole(e.target.value as UserRole);
+                if (e.target.value === "ADMIN") setCustomRoleId("");
+              }}
               className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
             >
               <option value="STAFF">Nhân viên</option>
               <option value="ADMIN">Admin</option>
             </select>
           </div>
+
+          {role === "STAFF" && customRoles.length > 0 && (
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-1.5">
+                Vai trò tùy chỉnh <span className="text-muted-foreground font-normal">(tùy chọn)</span>
+              </label>
+              <select
+                value={customRoleId}
+                onChange={(e) => setCustomRoleId(e.target.value)}
+                className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+              >
+                <option value="">— Không có (dùng quyền mặc định STAFF) —</option>
+                {customRoles.map((r) => (
+                  <option key={r.id} value={r.id}>
+                    {r.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
           <button
             onClick={handleSaveProfile}
             disabled={saving}

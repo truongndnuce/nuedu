@@ -20,6 +20,7 @@ const USER_SELECT = {
   fullName: true,
   avatarUrl: true,
   role: true,
+  customRoleId: true,
   isActive: true,
   lastLoginAt: true,
   createdAt: true,
@@ -68,6 +69,7 @@ export class UsersService {
         passwordHash,
         role: dto.role ?? UserRole.STAFF,
         avatarUrl: dto.avatarUrl,
+        customRoleId: dto.customRoleId ?? null,
         createdById,
       },
       select: USER_SELECT,
@@ -96,6 +98,7 @@ export class UsersService {
       ...(dto.fullName && { fullName: dto.fullName }),
       ...(dto.role && { role: dto.role }),
       ...(dto.avatarUrl !== undefined && { avatarUrl: dto.avatarUrl }),
+      ...('customRoleId' in dto && { customRoleId: dto.customRoleId ?? null }),
     };
 
     if (dto.password) {
@@ -127,23 +130,28 @@ export class UsersService {
 
   async getPermissions(id: string) {
     await this.assertExists(id);
-    const user = await this.prisma.user.findUniqueOrThrow({ where: { id }, select: { role: true } });
+    const user = await this.prisma.user.findUniqueOrThrow({ where: { id }, select: { role: true, customRoleId: true } });
 
-    const [rolePerms, userPerms] = await Promise.all([
-      this.prisma.rolePermission.findMany({
-        where: { role: user.role },
-        include: { permission: true },
-      }),
+    const [basePerms, userPerms] = await Promise.all([
+      user.customRoleId
+        ? this.prisma.customRolePermission.findMany({
+            where: { customRoleId: user.customRoleId },
+            include: { permission: true },
+          }).then((perms) => perms.map((p) => ({ permission: p.permission })))
+        : this.prisma.rolePermission.findMany({
+            where: { role: user.role },
+            include: { permission: true },
+          }),
       this.prisma.userPermission.findMany({
         where: { userId: id },
         include: { permission: true },
       }),
     ]);
 
-    const roleKeys = new Set(rolePerms.map((rp) => rp.permission.key));
+    const baseKeys = new Set(basePerms.map((rp) => rp.permission.key));
     const overrides = userPerms.map((up) => ({ key: up.permission.key, granted: up.granted }));
 
-    const effective = new Set(roleKeys);
+    const effective = new Set(baseKeys);
     for (const up of userPerms) {
       if (up.granted) effective.add(up.permission.key);
       else effective.delete(up.permission.key);
@@ -151,7 +159,8 @@ export class UsersService {
 
     return {
       role: user.role,
-      roleDefaults: Array.from(roleKeys),
+      customRoleId: user.customRoleId,
+      roleDefaults: Array.from(baseKeys),
       overrides,
       effective: Array.from(effective),
     };
@@ -196,6 +205,6 @@ export class UsersService {
   }
 
   private generateTempPassword(): string {
-    return crypto.randomBytes(10).toString('base64url');
+    return 'nuedu12345';
   }
 }

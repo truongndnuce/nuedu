@@ -4,6 +4,7 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Patch,
   Post,
   Req,
   Res,
@@ -102,5 +103,15 @@ export class AuthController {
   @ApiOperation({ summary: 'Get current user profile + effective permissions' })
   async me(@CurrentUser() user: AuthUser) {
     return this.authService.getMe(user.id);
+  }
+
+  @Patch('me')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Update own profile (name or password)' })
+  async updateMe(
+    @CurrentUser() user: AuthUser,
+    @Body() dto: { fullName?: string; currentPassword?: string; newPassword?: string },
+  ) {
+    await this.authService.updateProfile(user.id, dto);
   }
 }

@@ -20,6 +20,7 @@ import { PublicModule } from './modules/public/public.module';
 import { RevalidationModule } from './modules/revalidation/revalidation.module';
 import { AppSchedulerModule } from './modules/scheduler/scheduler.module';
 import { TagsModule } from './modules/tags/tags.module';
+import { RolesModule } from './modules/roles/roles.module';
 import { UsersModule } from './modules/users/users.module';
 
 @Module({
@@ -43,6 +44,7 @@ import { UsersModule } from './modules/users/users.module';
     AuthModule,
     PermissionsModule,
     UsersModule,
+    RolesModule,
     MediaModule,
     CategoriesModule,
     TagsModule,
