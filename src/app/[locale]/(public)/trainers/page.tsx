@@ -1,10 +1,24 @@
 import { useTranslations, useLocale } from "next-intl";
 import { TrainerCard } from "@/components/public/TrainerCard";
-import { trainers } from "@/content/trainers";
+import type { ApiTrainer } from "@/lib/api/trainers.api";
 
-export default function TrainersPage() {
+const API_BASE =
+  process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000/api/v1";
+
+async function fetchTrainers(): Promise<ApiTrainer[]> {
+  try {
+    const res = await fetch(`${API_BASE}/trainers`, { next: { revalidate: 60 } });
+    if (!res.ok) return [];
+    return res.json();
+  } catch {
+    return [];
+  }
+}
+
+export default async function TrainersPage() {
   const t = useTranslations("trainers");
   const locale = useLocale();
+  const trainers = await fetchTrainers();
 
   return (
     <div className="py-16">

@@ -1,0 +1,43 @@
+import { CanActivate, ExecutionContext, ForbiddenException, Injectable } from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
+import { UserRole } from '@prisma/client';
+import { PERMISSIONS_KEY } from '../decorators/permissions.decorator';
+
+interface AuthUser {
+  id: string;
+  role: UserRole;
+  effectivePermissions: string[];
+}
+
+@Injectable()
+export class PermissionGuard implements CanActivate {
+  constructor(private reflector: Reflector) {}
+
+  canActivate(context: ExecutionContext): boolean {
+    const required = this.reflector.getAllAndOverride<string[]>(PERMISSIONS_KEY, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
+
+    if (!required || required.length === 0) return true;
+
+    const request = context.switchToHttp().getRequest<{ user: AuthUser }>();
+    const user = request.user;
+
+    if (!user) return false;
+
+    // ADMIN bypasses all permission checks
+    if (user.role === UserRole.ADMIN) return true;
+
+    // OR logic: user must have at least one of the required permissions
+    const hasPermission = required.some((key) => user.effectivePermissions.includes(key));
+
+    if (!hasPermission) {
+      throw new ForbiddenException(
+        `Missing required permission: ${required.join(' or ')}`,
+      );
+    }
+
+    return true;
+  }
+}

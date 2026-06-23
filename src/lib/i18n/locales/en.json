@@ -120,6 +120,37 @@
       "activate": "Activate",
       "deactivate": "Deactivate"
     },
+    "testimonials": {
+      "title": "Student feedback",
+      "add": "Add feedback",
+      "editTitle": "Edit feedback",
+      "createTitle": "Add new feedback",
+      "name": "Reviewer name",
+      "role": "Role / Background",
+      "contentVi": "Content (Vietnamese)",
+      "contentEn": "Content (English)",
+      "avatar": "Avatar URL",
+      "order": "Display order",
+      "isActive": "Show on homepage",
+      "empty": "No feedback yet"
+    },
+    "trainers": {
+      "title": "Trainers",
+      "add": "Add trainer",
+      "editTitle": "Edit trainer",
+      "createTitle": "Add new trainer",
+      "nameVi": "Name (Vietnamese)",
+      "nameEn": "Name (English)",
+      "titleVi": "Title (VI)",
+      "titleEn": "Title (EN)",
+      "bioVi": "Bio (VI)",
+      "bioEn": "Bio (EN)",
+      "avatar": "Avatar URL",
+      "specialties": "Specialties (comma-separated)",
+      "order": "Order",
+      "isActive": "Visible",
+      "empty": "No trainers yet"
+    },
     "login": {
       "title": "Sign in",
       "email": "Email",

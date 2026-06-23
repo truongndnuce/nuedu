@@ -1,16 +1,27 @@
 "use client";
 
-import { useState, use } from "react";
+import { use, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useLocale } from "next-intl";
 import { useForm, Controller } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { notFound } from "next/navigation";
 import { PostEditor } from "@/components/portal/posts/PostEditor";
-import { FeaturedImagePicker } from "@/components/portal/posts/FeaturedImagePicker";
-import { categories, getPostBySlug, updatePost, getAllPostsAdmin } from "@/fixtures/posts";
+import { FeaturedImagePicker, type FeaturedImageResult } from "@/components/portal/posts/FeaturedImagePicker";
+import { SchedulePicker } from "@/components/portal/posts/SchedulePicker";
+import { listCategories, type Category } from "@/lib/api/categories.api";
+import {
+  getPost,
+  updatePost,
+  publishPost,
+  unpublishPost,
+  schedulePost,
+  unschedulePost,
+  type ApiPost,
+} from "@/lib/api/posts.api";
+import { ApiError } from "@/lib/api/client";
 import { ArrowLeft } from "lucide-react";
+import { notFound } from "next/navigation";
 
 const postSchema = z.object({
   titleVi: z.string().min(1),
@@ -19,8 +30,7 @@ const postSchema = z.object({
   contentEn: z.string().optional(),
   excerptVi: z.string().optional(),
   excerptEn: z.string().optional(),
-  featuredImage: z.string().optional(),
-  categorySlug: z.string().min(1),
+  categoryId: z.string().optional(),
   metaTitleVi: z.string().optional(),
   metaDescriptionVi: z.string().optional(),
 });
@@ -37,55 +47,153 @@ export default function EditPostPage({
   const locale = useLocale();
   const [activeTab, setActiveTab] = useState<"vi" | "en">("vi");
   const [seoOpen, setSeoOpen] = useState(false);
+  const [post, setPost] = useState<ApiPost | null>(null);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [featuredImage, setFeaturedImage] = useState<FeaturedImageResult | undefined>();
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [scheduling, setScheduling] = useState(false);
 
-  // Find post by id
-  const allPosts = getAllPostsAdmin();
-  const post = allPosts.find((p) => p.id === id);
-  if (!post) {
-    notFound();
-  }
-
-  const {
-    register,
-    handleSubmit,
-    control,
-    formState: { errors, isSubmitting },
-  } = useForm<PostFormData>({
+  const form = useForm<PostFormData>({
     resolver: zodResolver(postSchema),
     defaultValues: {
-      titleVi: post.titleVi,
-      titleEn: post.titleEn,
-      contentVi: post.contentVi,
-      contentEn: post.contentEn,
-      excerptVi: post.excerptVi,
-      excerptEn: post.excerptEn,
-      featuredImage: post.featuredImage,
-      categorySlug: post.category.slug,
-      metaTitleVi: post.metaTitleVi,
-      metaDescriptionVi: post.metaDescriptionVi,
+      titleVi: "",
+      titleEn: "",
+      contentVi: "",
+      contentEn: "",
+      excerptVi: "",
+      excerptEn: "",
+      categoryId: "",
+      metaTitleVi: "",
+      metaDescriptionVi: "",
     },
   });
 
-  function onSubmit(data: PostFormData, status: "published" | "draft") {
-    const category = categories.find((c) => c.slug === data.categorySlug)!;
-    updatePost(id, {
-      titleVi: data.titleVi,
-      titleEn: data.titleEn ?? data.titleVi,
-      excerptVi: data.excerptVi ?? "",
-      excerptEn: data.excerptEn ?? data.excerptVi ?? "",
-      contentVi: data.contentVi ?? "",
-      contentEn: data.contentEn ?? "",
-      featuredImage: data.featuredImage,
-      status,
-      category,
-      metaTitleVi: data.metaTitleVi,
-      metaDescriptionVi: data.metaDescriptionVi,
-    });
-    router.push(`/${locale}/portal/posts`);
+  useEffect(() => {
+    Promise.all([getPost(id), listCategories()])
+      .then(([p, cats]) => {
+        setPost(p);
+        setCategories(cats);
+        if (p.featuredImage) {
+          setFeaturedImage({ mediaId: p.featuredImage.id, url: p.featuredImage.cloudinaryUrl });
+        }
+        form.reset({
+          titleVi: p.titleVi,
+          titleEn: p.titleEn ?? "",
+          contentVi: p.contentVi ?? "",
+          contentEn: p.contentEn ?? "",
+          excerptVi: p.excerptVi ?? "",
+          excerptEn: p.excerptEn ?? "",
+          categoryId: p.category?.id ?? "",
+          metaTitleVi: p.metaTitleVi ?? "",
+          metaDescriptionVi: p.metaDescriptionVi ?? "",
+        });
+        setLoading(false);
+      })
+      .catch((e) => {
+        if (e instanceof ApiError && e.status === 404) {
+          notFound();
+        }
+        setError(e.message);
+        setLoading(false);
+      });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
+
+  async function onSubmit(data: PostFormData, publish: boolean) {
+    if (!post) return;
+    setSubmitting(true);
+    setError(null);
+    try {
+      await updatePost(id, {
+        titleVi: data.titleVi,
+        titleEn: data.titleEn || data.titleVi,
+        excerptVi: data.excerptVi,
+        excerptEn: data.excerptEn || data.excerptVi,
+        contentVi: data.contentVi,
+        contentEn: data.contentEn || data.contentVi,
+        categoryId: data.categoryId || undefined,
+        featuredImageId: featuredImage?.mediaId || undefined,
+        metaTitleVi: data.metaTitleVi,
+        metaDescriptionVi: data.metaDescriptionVi,
+      });
+
+      if (publish) {
+        await publishPost(id);
+      } else if (post.status === "PUBLISHED") {
+        await unpublishPost(id);
+      }
+
+      router.push(`/${locale}/portal/posts`);
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Lỗi khi lưu bài viết");
+    } finally {
+      setSubmitting(false);
+    }
   }
+
+  async function handleSchedule(isoDate: string) {
+    if (!post) return;
+    setScheduling(true);
+    setError(null);
+    try {
+      const data = form.getValues();
+      await updatePost(id, {
+        titleVi: data.titleVi,
+        titleEn: data.titleEn || data.titleVi,
+        excerptVi: data.excerptVi,
+        excerptEn: data.excerptEn || data.excerptVi,
+        contentVi: data.contentVi,
+        contentEn: data.contentEn || data.contentVi,
+        categoryId: data.categoryId || undefined,
+        featuredImageId: featuredImage?.mediaId || undefined,
+        metaTitleVi: data.metaTitleVi,
+        metaDescriptionVi: data.metaDescriptionVi,
+      });
+      const updated = await schedulePost(id, isoDate);
+      setPost(updated);
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Lỗi khi lên lịch bài viết");
+    } finally {
+      setScheduling(false);
+    }
+  }
+
+  async function handleUnschedule() {
+    if (!post) return;
+    setScheduling(true);
+    setError(null);
+    try {
+      const updated = await unschedulePost(id);
+      setPost(updated);
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Lỗi khi hủy lịch");
+    } finally {
+      setScheduling(false);
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex h-40 items-center justify-center">
+        <div className="h-6 w-6 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      </div>
+    );
+  }
+
+  if (!post) return null;
+
+  const { register, handleSubmit, control, formState: { errors } } = form;
 
   return (
     <div className="space-y-6">
+      {error && (
+        <div className="rounded-lg bg-destructive/10 px-4 py-3 text-sm text-destructive">
+          {error}
+        </div>
+      )}
+
       <div className="flex items-center gap-3">
         <button
           onClick={() => router.back()}
@@ -93,7 +201,9 @@ export default function EditPostPage({
         >
           <ArrowLeft size={18} />
         </button>
-        <h1 className="text-2xl font-bold text-foreground">Chỉnh sửa bài viết</h1>
+        <h1 className="text-2xl font-bold text-foreground">
+          Chỉnh sửa bài viết
+        </h1>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[1fr_300px]">
@@ -121,6 +231,9 @@ export default function EditPostPage({
                 placeholder="Tiêu đề (tiếng Việt)"
                 className="w-full rounded-lg border border-input bg-background px-4 py-3 text-lg font-semibold placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
               />
+              {errors.titleVi && (
+                <p className="text-xs text-destructive">Tiêu đề tiếng Việt bắt buộc</p>
+              )}
               <input
                 {...register("excerptVi")}
                 placeholder="Mô tả ngắn..."
@@ -194,31 +307,42 @@ export default function EditPostPage({
             <div className="flex flex-col gap-2">
               <button
                 type="button"
-                onClick={handleSubmit((d) => onSubmit(d, "published"))}
-                disabled={isSubmitting}
+                onClick={handleSubmit((d) => onSubmit(d, true), (errs) => console.error("Form validation failed:", errs))}
+                disabled={submitting || scheduling}
                 className="w-full rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-60 transition-colors"
               >
-                Đăng ngay
+                {submitting ? "Đang lưu..." : "Đăng ngay"}
               </button>
               <button
                 type="button"
-                onClick={handleSubmit((d) => onSubmit(d, "draft"))}
-                disabled={isSubmitting}
+                onClick={handleSubmit((d) => onSubmit(d, false), (errs) => console.error("Form validation failed:", errs))}
+                disabled={submitting || scheduling}
                 className="w-full rounded-lg border border-border px-4 py-2 text-sm font-medium hover:bg-muted transition-colors"
               >
                 Lưu nháp
               </button>
+            </div>
+            <div className="border-t border-border pt-3">
+              <p className="mb-2 text-xs text-muted-foreground">Hoặc lên lịch đăng</p>
+              <SchedulePicker
+                currentStatus={post.status}
+                scheduledAt={post.scheduledAt}
+                onSchedule={handleSchedule}
+                onUnschedule={handleUnschedule}
+                disabled={submitting || scheduling}
+              />
             </div>
           </div>
 
           <div className="rounded-xl border border-border bg-card p-4 space-y-2">
             <h3 className="text-sm font-semibold text-foreground">Danh mục</h3>
             <select
-              {...register("categorySlug")}
+              {...register("categoryId")}
               className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
             >
+              <option value="">— Chọn danh mục —</option>
               {categories.map((cat) => (
-                <option key={cat.slug} value={cat.slug}>
+                <option key={cat.id} value={cat.id}>
                   {cat.nameVi}
                 </option>
               ))}
@@ -226,16 +350,12 @@ export default function EditPostPage({
           </div>
 
           <div className="rounded-xl border border-border bg-card p-4 space-y-2">
-            <h3 className="text-sm font-semibold text-foreground">Ảnh đại diện</h3>
-            <Controller
-              name="featuredImage"
-              control={control}
-              render={({ field }) => (
-                <FeaturedImagePicker
-                  value={field.value}
-                  onChange={field.onChange}
-                />
-              )}
+            <h3 className="text-sm font-semibold text-foreground">
+              Ảnh đại diện
+            </h3>
+            <FeaturedImagePicker
+              previewUrl={featuredImage?.url}
+              onChange={setFeaturedImage}
             />
           </div>
         </div>

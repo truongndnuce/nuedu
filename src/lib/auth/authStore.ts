@@ -1,10 +1,7 @@
 "use client";
 
 import { create } from "zustand";
-
-export interface Permission {
-  key: string;
-}
+import { persist } from "zustand/middleware";
 
 export interface AuthUser {
   id: string;
@@ -23,11 +20,20 @@ interface AuthState {
   setLoading: (loading: boolean) => void;
 }
 
-export const useAuthStore = create<AuthState>((set) => ({
-  user: null,
-  accessToken: null,
-  isLoading: false,
-  setAuth: (user, accessToken) => set({ user, accessToken, isLoading: false }),
-  clearAuth: () => set({ user: null, accessToken: null, isLoading: false }),
-  setLoading: (isLoading) => set({ isLoading }),
-}));
+export const useAuthStore = create<AuthState>()(
+  persist(
+    (set) => ({
+      user: null,
+      accessToken: null,
+      isLoading: false,
+      setAuth: (user, accessToken) => set({ user, accessToken, isLoading: false }),
+      clearAuth: () => set({ user: null, accessToken: null, isLoading: false }),
+      setLoading: (isLoading) => set({ isLoading }),
+    }),
+    {
+      name: "nuedu-auth",
+      // chỉ persist user và token, không persist isLoading
+      partialize: (state) => ({ user: state.user, accessToken: state.accessToken }),
+    },
+  ),
+);

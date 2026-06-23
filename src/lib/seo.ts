@@ -1,12 +1,24 @@
 import type { Metadata } from "next";
-import type { Post } from "@/fixtures/posts";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
+interface PostForMeta {
+  titleVi: string;
+  titleEn?: string;
+  excerptVi?: string;
+  excerptEn?: string;
+  metaTitleVi?: string;
+  metaTitleEn?: string;
+  metaDescriptionVi?: string;
+  metaDescriptionEn?: string;
+  publishedAt: string;
+  featuredImage?: string | { cloudinaryUrl: string } | null;
+}
+
 export function buildPostMetadata(
-  post: Post,
+  post: PostForMeta,
   locale: string,
-  slug: string
+  slug: string,
 ): Metadata {
   const isVi = locale === "vi";
   const title = isVi
@@ -16,6 +28,13 @@ export function buildPostMetadata(
     ? (post.metaDescriptionVi ?? post.excerptVi)
     : (post.metaDescriptionEn ?? post.excerptEn);
   const altLocale = isVi ? "en" : "vi";
+
+  const imageUrl =
+    !post.featuredImage
+      ? undefined
+      : typeof post.featuredImage === "string"
+        ? post.featuredImage
+        : post.featuredImage.cloudinaryUrl;
 
   return {
     title,
@@ -32,13 +51,13 @@ export function buildPostMetadata(
       url: `${SITE_URL}/${locale}/news/${slug}`,
       type: "article",
       publishedTime: post.publishedAt,
-      ...(post.featuredImage && { images: [{ url: post.featuredImage }] }),
+      ...(imageUrl && { images: [{ url: imageUrl }] }),
     },
     twitter: {
       card: "summary_large_image",
       title,
       description,
-      ...(post.featuredImage && { images: [post.featuredImage] }),
+      ...(imageUrl && { images: [imageUrl] }),
     },
     robots: { index: true, follow: true },
   };

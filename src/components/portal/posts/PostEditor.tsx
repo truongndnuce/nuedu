@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Underline from "@tiptap/extension-underline";
@@ -18,7 +19,9 @@ import {
   Image as ImageIcon,
   Heading2,
   Heading3,
+  Loader2,
 } from "lucide-react";
+import { uploadFile } from "@/lib/api/uploadLocal";
 import { cn } from "@/lib/utils";
 
 interface PostEditorProps {
@@ -28,6 +31,22 @@ interface PostEditorProps {
 }
 
 export function PostEditor({ content, onChange, placeholder }: PostEditorProps) {
+  const imageInputRef = useRef<HTMLInputElement>(null);
+  const [imageUploading, setImageUploading] = useState(false);
+
+  async function handleImageFile(file: File) {
+    if (!editor) return;
+    setImageUploading(true);
+    try {
+      const result = await uploadFile(file, "posts");
+      editor.chain().focus().setImage({ src: result.url, alt: file.name }).run();
+    } catch {
+      // silently fail — user can retry
+    } finally {
+      setImageUploading(false);
+    }
+  }
+
   const editor = useEditor({
     extensions: [
       StarterKit,
@@ -42,6 +61,16 @@ export function PostEditor({ content, onChange, placeholder }: PostEditorProps) 
     },
     immediatelyRender: false,
   });
+
+  // Sync content from props once after initial load (e.g. when edit page fetches post data)
+  const synced = useRef(false);
+  useEffect(() => {
+    if (!editor || synced.current) return;
+    if (content && content !== "<p></p>") {
+      editor.commands.setContent(content);
+      synced.current = true;
+    }
+  }, [editor, content]);
 
   if (!editor) return null;
 
@@ -129,6 +158,27 @@ export function PostEditor({ content, onChange, placeholder }: PostEditorProps) 
             <Icon size={15} />
           </button>
         ))}
+        <div className="mx-1 h-4 w-px bg-border" />
+        <button
+          type="button"
+          title="Chèn ảnh"
+          disabled={imageUploading}
+          onClick={() => imageInputRef.current?.click()}
+          className="rounded p-1.5 text-sm hover:bg-muted transition-colors disabled:opacity-50"
+        >
+          {imageUploading ? <Loader2 size={15} className="animate-spin" /> : <ImageIcon size={15} />}
+        </button>
+        <input
+          ref={imageInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file) handleImageFile(file);
+            e.target.value = "";
+          }}
+        />
       </div>
       {/* Content area */}
       <EditorContent

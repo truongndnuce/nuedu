@@ -1,9 +1,11 @@
-import { useTranslations, useLocale } from "next-intl";
+import { getTranslations, getLocale } from "next-intl/server";
 import Image from "next/image";
 import { Hero } from "@/components/public/Hero";
 import { ServiceCard } from "@/components/public/ServiceCard";
 import { TrainerCard } from "@/components/public/TrainerCard";
-import { trainers } from "@/content/trainers";
+import { TestimonialMarquee } from "@/components/public/TestimonialMarquee";
+import type { ApiTrainer } from "@/lib/api/trainers.api";
+import type { ApiTestimonial } from "@/lib/api/testimonials.api";
 import Link from "next/link";
 import {
   Apple,
@@ -93,10 +95,43 @@ const outcomes = [
   },
 ];
 
-export default function HomePage() {
-  const t = useTranslations("home");
-  const tc = useTranslations("common");
-  const locale = useLocale();
+const API_BASE =
+  process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000/api/v1";
+
+async function fetchTrainers(): Promise<ApiTrainer[]> {
+  try {
+    const res = await fetch(`${API_BASE}/trainers`, {
+      next: { revalidate: 60 },
+    });
+    if (!res.ok) return [];
+    return res.json();
+  } catch {
+    return [];
+  }
+}
+
+async function fetchTestimonials(): Promise<ApiTestimonial[]> {
+  try {
+    const res = await fetch(`${API_BASE}/testimonials`, {
+      next: { revalidate: 60 },
+    });
+    if (!res.ok) return [];
+    return res.json();
+  } catch {
+    return [];
+  }
+}
+
+export default async function HomePage() {
+  const [t, tc, locale] = await Promise.all([
+    getTranslations("home"),
+    getTranslations("common"),
+    getLocale(),
+  ]);
+  const [trainers, testimonials] = await Promise.all([
+    fetchTrainers(),
+    fetchTestimonials(),
+  ]);
 
   return (
     <>
@@ -221,6 +256,24 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {testimonials.length > 0 && (
+        <section className="bg-secondary py-16 sm:py-20 overflow-hidden">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6">
+            <div className="mb-10 sm:mb-12 text-center">
+              <p className="text-sm font-bold uppercase text-primary">
+                {locale === "vi" ? "Học viên nói gì" : "What students say"}
+              </p>
+              <h2 className="mt-2 text-3xl font-black text-foreground sm:text-5xl">
+                {locale === "vi"
+                  ? "Phản hồi từ học viên"
+                  : "Student testimonials"}
+              </h2>
+            </div>
+          </div>
+          <TestimonialMarquee testimonials={testimonials} locale={locale} />
+        </section>
+      )}
 
       <section className="bg-primary py-16 text-primary-foreground sm:py-20">
         <div className="mx-auto grid max-w-7xl gap-8 px-4 sm:px-6 lg:grid-cols-[1fr_0.8fr] lg:items-center">

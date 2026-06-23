@@ -120,6 +120,37 @@
       "activate": "Kích hoạt",
       "deactivate": "Vô hiệu hóa"
     },
+    "testimonials": {
+      "title": "Feedback học viên",
+      "add": "Thêm feedback",
+      "editTitle": "Sửa feedback",
+      "createTitle": "Thêm feedback mới",
+      "name": "Tên người đánh giá",
+      "role": "Vai trò / Background",
+      "contentVi": "Nội dung (Tiếng Việt)",
+      "contentEn": "Nội dung (English)",
+      "avatar": "URL ảnh đại diện",
+      "order": "Thứ tự hiển thị",
+      "isActive": "Hiển thị trang chủ",
+      "empty": "Chưa có feedback nào"
+    },
+    "trainers": {
+      "title": "Giảng viên",
+      "add": "Thêm giảng viên",
+      "editTitle": "Sửa giảng viên",
+      "createTitle": "Thêm giảng viên mới",
+      "nameVi": "Tên (Tiếng Việt)",
+      "nameEn": "Name (English)",
+      "titleVi": "Chức danh (VI)",
+      "titleEn": "Title (EN)",
+      "bioVi": "Bio (VI)",
+      "bioEn": "Bio (EN)",
+      "avatar": "URL ảnh đại diện",
+      "specialties": "Chuyên môn (cách nhau bởi dấu phẩy)",
+      "order": "Thứ tự",
+      "isActive": "Hiển thị",
+      "empty": "Chưa có giảng viên nào"
+    },
     "login": {
       "title": "Đăng nhập",
       "email": "Email",

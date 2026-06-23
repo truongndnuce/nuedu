@@ -1,8 +1,8 @@
 import Image from "next/image";
-import type { Trainer } from "@/content/trainers";
+import type { ApiTrainer } from "@/lib/api/trainers.api";
 
 interface TrainerCardProps {
-  trainer: Trainer;
+  trainer: ApiTrainer;
   locale: string;
 }
 

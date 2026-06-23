@@ -24,7 +24,7 @@ export function UploadDropzone({ onUploaded }: UploadDropzoneProps) {
 
     for (const file of fileArray) {
       try {
-        const result = await uploadFile(file, "public", (pct) => {
+        const result = await uploadFile(file, "posts", (pct) => {
           setProgress((prev) => ({ ...prev, [file.name]: pct }));
         });
         results.push(result);

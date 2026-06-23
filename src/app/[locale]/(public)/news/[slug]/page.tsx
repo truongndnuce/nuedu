@@ -19,11 +19,15 @@ export async function generateMetadata({
 }
 
 export async function generateStaticParams() {
-  const posts = await getPublicPosts();
-  return posts.flatMap((post) => [
-    { locale: "vi", slug: post.slug },
-    { locale: "en", slug: post.slug },
-  ]);
+  try {
+    const { items } = await getPublicPosts({ limit: 100 });
+    return items.flatMap((post) => [
+      { locale: "vi", slug: post.slug },
+      { locale: "en", slug: post.slug },
+    ]);
+  } catch {
+    return [];
+  }
 }
 
 export default async function PostDetailPage({
@@ -48,8 +52,8 @@ export default async function PostDetailPage({
     "@type": "Article",
     headline: title,
     datePublished: post.publishedAt,
-    author: { "@type": "Person", name: post.author.name },
-    ...(post.featuredImage && { image: post.featuredImage }),
+    author: { "@type": "Person", name: post.author.fullName },
+    ...(post.featuredImage && { image: post.featuredImage.cloudinaryUrl }),
   };
 
   return (
@@ -74,12 +78,14 @@ export default async function PostDetailPage({
           </nav>
 
           {/* Category */}
-          <Link
-            href={`/${locale}/news/category/${post.category.slug}`}
-            className="inline-block rounded-full bg-primary px-3 py-1 text-xs font-medium text-primary-foreground mb-4"
-          >
-            {isVi ? post.category.nameVi : post.category.nameEn}
-          </Link>
+          {post.category && (
+            <Link
+              href={`/${locale}/news/category/${post.category.slug}`}
+              className="inline-block rounded-full bg-primary px-3 py-1 text-xs font-medium text-primary-foreground mb-4"
+            >
+              {isVi ? post.category.nameVi : post.category.nameEn}
+            </Link>
+          )}
 
           {/* Title */}
           <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
@@ -88,7 +94,7 @@ export default async function PostDetailPage({
 
           {/* Meta */}
           <div className="mt-4 flex items-center gap-4 text-sm text-muted-foreground">
-            <span>{post.author.name}</span>
+            <span>{post.author.fullName}</span>
             <span>·</span>
             <time dateTime={post.publishedAt}>{formattedDate}</time>
           </div>
@@ -97,8 +103,8 @@ export default async function PostDetailPage({
           {post.featuredImage && (
             <div className="relative mt-8 h-64 w-full overflow-hidden rounded-xl sm:h-80">
               <Image
-                src={post.featuredImage}
-                alt={title}
+                src={post.featuredImage.cloudinaryUrl}
+                alt={title ?? ""}
                 fill
                 className="object-cover"
                 priority
@@ -109,7 +115,7 @@ export default async function PostDetailPage({
           {/* Content */}
           <div
             className="prose prose-green mt-10 max-w-none"
-            dangerouslySetInnerHTML={{ __html: content }}
+            dangerouslySetInnerHTML={{ __html: content ?? "" }}
           />
         </div>
       </article>

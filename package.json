@@ -38,6 +38,9 @@
     "zod": "^4.4.3",
     "zustand": "^5.0.14"
   },
+  "pnpm": {
+    "onlyBuiltDependencies": ["argon2", "@prisma/client", "@prisma/engines", "prisma", "sharp", "@parcel/watcher", "@swc/core"]
+  },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20.19.42",

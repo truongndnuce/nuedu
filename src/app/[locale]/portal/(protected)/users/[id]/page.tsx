@@ -1,23 +1,26 @@
 "use client";
 
-import { useState, use } from "react";
+import { use, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useLocale } from "next-intl";
-import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import {
-  getUserById,
+  getUser,
   updateUser,
-  ALL_PERMISSIONS,
-  ROLE_DEFAULT_PERMISSIONS,
-  type StaffUser,
+  getUserPermissions,
+  updateUserPermissions,
+  listAllPermissions,
+  getRoleDefaults,
+  type ApiUser,
   type UserRole,
-} from "@/fixtures/users";
+  type PermissionDef,
+  type UserPermissions,
+} from "@/lib/api/users.api";
+import { listRoles, type ApiCustomRole } from "@/lib/api/roles.api";
 
-// Group permissions by category
-function groupedPermissions() {
-  const groups: Record<string, typeof ALL_PERMISSIONS> = {};
-  for (const p of ALL_PERMISSIONS) {
+function groupByGroup(perms: PermissionDef[]): Record<string, PermissionDef[]> {
+  const groups: Record<string, PermissionDef[]> = {};
+  for (const p of perms) {
     groups[p.group] = groups[p.group] ?? [];
     groups[p.group].push(p);
   }
@@ -33,33 +36,139 @@ export default function EditUserPage({
   const router = useRouter();
   const locale = useLocale();
 
-  const initial = getUserById(id);
-  if (!initial) notFound();
+  const [user, setUser] = useState<ApiUser | null>(null);
+  const [effectivePerms, setEffectivePerms] = useState<string[]>([]);
+  const [allPerms, setAllPerms] = useState<PermissionDef[]>([]);
+  const [roleDefaults, setRoleDefaults] = useState<Record<UserRole, string[]>>({
+    ADMIN: [],
+    STAFF: [],
+  });
+  const [customRoles, setCustomRoles] = useState<ApiCustomRole[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [activeTab, setActiveTab] = useState<"profile" | "permissions">(
+    "profile",
+  );
 
-  const [user, setUser] = useState<StaffUser>(initial);
-  const [activeTab, setActiveTab] = useState<"profile" | "permissions">("profile");
-  const groups = groupedPermissions();
+  // Editable profile fields
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [role, setRole] = useState<UserRole>("STAFF");
+  const [customRoleId, setCustomRoleId] = useState<string>("");
+
+  useEffect(() => {
+    Promise.all([
+      getUser(id),
+      getUserPermissions(id),
+      listAllPermissions(),
+      getRoleDefaults(),
+      listRoles(),
+    ])
+      .then(([u, permsData, allP, roleDefs, roles]) => {
+        setUser(u);
+        setFullName(u.fullName);
+        setEmail(u.email);
+        setRole(u.role);
+        setCustomRoleId(u.customRoleId ?? "");
+        setEffectivePerms(permsData.effective);
+        setAllPerms(allP);
+        setRoleDefaults(roleDefs as Record<UserRole, string[]>);
+        setCustomRoles(roles);
+      })
+      .catch((e) => setError(e.message))
+      .finally(() => setLoading(false));
+  }, [id]);
 
   function togglePermission(key: string) {
-    const perms = user.permissions.includes(key)
-      ? user.permissions.filter((p) => p !== key)
-      : [...user.permissions, key];
-    setUser({ ...user, permissions: perms });
+    setEffectivePerms((prev) =>
+      prev.includes(key) ? prev.filter((p) => p !== key) : [...prev, key],
+    );
   }
 
   function resetToRoleDefaults() {
-    setUser({ ...user, permissions: ROLE_DEFAULT_PERMISSIONS[user.role] });
+    setEffectivePerms(roleDefaults[role] ?? []);
   }
 
-  function handleSave() {
-    updateUser(id, { name: user.name, email: user.email, role: user.role, permissions: user.permissions });
-    router.push(`/${locale}/portal/users`);
+  async function handleSaveProfile() {
+    if (!user) return;
+    setSaving(true);
+    try {
+      const updated = await updateUser(id, {
+        fullName,
+        email,
+        role,
+        customRoleId: customRoleId || null,
+      });
+      setUser(updated);
+      // Reset permissions to new role defaults when role changes
+      if (updated.role !== user.role) {
+        setEffectivePerms(roleDefaults[updated.role] ?? []);
+      }
+      router.push(`/${locale}/portal/users`);
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Lỗi khi lưu");
+    } finally {
+      setSaving(false);
+    }
   }
 
-  const roleDefault = ROLE_DEFAULT_PERMISSIONS[user.role] ?? [];
+  async function handleSavePermissions() {
+    if (!user) return;
+    setSaving(true);
+    try {
+      const currentRoleDefaults = new Set(roleDefaults[user.role] ?? []);
+      // Only send deviations from role defaults
+      const overrides = allPerms
+        .map((p) => {
+          const granted = effectivePerms.includes(p.key);
+          const isDefault = currentRoleDefaults.has(p.key);
+          if (granted !== isDefault) {
+            return { key: p.key, granted };
+          }
+          return null;
+        })
+        .filter((x): x is { key: string; granted: boolean } => x !== null);
+
+      await updateUserPermissions(id, overrides);
+      router.push(`/${locale}/portal/users`);
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Lỗi khi lưu phân quyền");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex h-40 items-center justify-center">
+        <div className="h-6 w-6 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="text-center py-16 text-muted-foreground">
+        Không tìm thấy người dùng
+      </div>
+    );
+  }
+
+  const groups = groupByGroup(allPerms);
+  const currentRoleDefaults = new Set(roleDefaults[user.role] ?? []);
 
   return (
     <div className="space-y-6 max-w-2xl">
+      {error && (
+        <div className="rounded-lg bg-destructive/10 px-4 py-3 text-sm text-destructive">
+          {error}
+          <button className="ml-2 underline" onClick={() => setError(null)}>
+            Đóng
+          </button>
+        </div>
+      )}
+
       <div className="flex items-center gap-3">
         <button
           onClick={() => router.back()}
@@ -67,10 +176,11 @@ export default function EditUserPage({
         >
           <ArrowLeft size={18} />
         </button>
-        <h1 className="text-2xl font-bold text-foreground">Chỉnh sửa người dùng</h1>
+        <h1 className="text-2xl font-bold text-foreground">
+          Chỉnh sửa người dùng
+        </h1>
       </div>
 
-      {/* Tabs */}
       <div className="flex gap-1 border-b border-border">
         {(["profile", "permissions"] as const).map((tab) => (
           <button
@@ -90,45 +200,69 @@ export default function EditUserPage({
       {activeTab === "profile" && (
         <div className="rounded-xl border border-border bg-card p-6 space-y-4">
           <div>
-            <label className="block text-sm font-medium text-foreground mb-1.5">Tên</label>
+            <label className="block text-sm font-medium text-foreground mb-1.5">
+              Tên
+            </label>
             <input
-              value={user.name}
-              onChange={(e) => setUser({ ...user, name: e.target.value })}
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
               className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-foreground mb-1.5">Email</label>
+            <label className="block text-sm font-medium text-foreground mb-1.5">
+              Email
+            </label>
             <input
-              value={user.email}
-              onChange={(e) => setUser({ ...user, email: e.target.value })}
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               type="email"
               className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-foreground mb-1.5">Vai trò</label>
+            <label className="block text-sm font-medium text-foreground mb-1.5">
+              Cấp độ hệ thống
+            </label>
             <select
-              value={user.role}
-              onChange={(e) =>
-                setUser({
-                  ...user,
-                  role: e.target.value as UserRole,
-                  permissions: ROLE_DEFAULT_PERMISSIONS[e.target.value as UserRole],
-                })
-              }
+              value={role}
+              onChange={(e) => {
+                setRole(e.target.value as UserRole);
+                if (e.target.value === "ADMIN") setCustomRoleId("");
+              }}
               className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
             >
-              <option value="author">Tác giả</option>
-              <option value="editor">Biên tập viên</option>
-              <option value="admin">Admin</option>
+              <option value="STAFF">Nhân viên</option>
+              <option value="ADMIN">Admin</option>
             </select>
           </div>
+
+          {role === "STAFF" && customRoles.length > 0 && (
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-1.5">
+                Vai trò tùy chỉnh <span className="text-muted-foreground font-normal">(tùy chọn)</span>
+              </label>
+              <select
+                value={customRoleId}
+                onChange={(e) => setCustomRoleId(e.target.value)}
+                className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+              >
+                <option value="">— Không có (dùng quyền mặc định STAFF) —</option>
+                {customRoles.map((r) => (
+                  <option key={r.id} value={r.id}>
+                    {r.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
           <button
-            onClick={handleSave}
-            className="rounded-lg bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors"
+            onClick={handleSaveProfile}
+            disabled={saving}
+            className="rounded-lg bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-60 transition-colors"
           >
-            Lưu thay đổi
+            {saving ? "Đang lưu..." : "Lưu thay đổi"}
           </button>
         </div>
       )}
@@ -137,7 +271,8 @@ export default function EditUserPage({
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <p className="text-sm text-muted-foreground">
-              Tùy chỉnh quyền riêng lẻ. Ô màu vàng = khác với mặc định vai trò.
+              Tùy chỉnh quyền riêng lẻ. Ô màu vàng = khác với mặc định vai
+              trò.
             </p>
             <button
               onClick={resetToRoleDefaults}
@@ -148,14 +283,17 @@ export default function EditUserPage({
           </div>
 
           {Object.entries(groups).map(([group, perms]) => (
-            <div key={group} className="rounded-xl border border-border overflow-hidden">
+            <div
+              key={group}
+              className="rounded-xl border border-border overflow-hidden"
+            >
               <div className="bg-muted/50 px-4 py-2.5 text-sm font-semibold text-foreground border-b border-border">
                 {group}
               </div>
               <div className="divide-y divide-border">
                 {perms.map((perm) => {
-                  const isEnabled = user.permissions.includes(perm.key);
-                  const isDefault = roleDefault.includes(perm.key);
+                  const isEnabled = effectivePerms.includes(perm.key);
+                  const isDefault = currentRoleDefaults.has(perm.key);
                   const isDeviation = isEnabled !== isDefault;
                   return (
                     <label
@@ -163,7 +301,9 @@ export default function EditUserPage({
                       className={`flex items-center justify-between px-4 py-3 cursor-pointer hover:bg-muted/30 transition-colors ${isDeviation ? "bg-yellow-50" : ""}`}
                     >
                       <div>
-                        <span className="text-sm text-foreground">{perm.label}</span>
+                        <span className="text-sm text-foreground">
+                          {perm.description ?? perm.key}
+                        </span>
                         {isDeviation && (
                           <span className="ml-2 text-xs text-orange-500">
                             {isEnabled ? "+ thêm" : "- bị xóa"}
@@ -184,10 +324,11 @@ export default function EditUserPage({
           ))}
 
           <button
-            onClick={handleSave}
-            className="rounded-lg bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors"
+            onClick={handleSavePermissions}
+            disabled={saving}
+            className="rounded-lg bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-60 transition-colors"
           >
-            Lưu phân quyền
+            {saving ? "Đang lưu..." : "Lưu phân quyền"}
           </button>
         </div>
       )}

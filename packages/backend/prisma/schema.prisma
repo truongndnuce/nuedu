@@ -1,0 +1,329 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// ===== USERS & RBAC =====
+
+enum UserRole {
+  ADMIN
+  STAFF
+}
+
+model User {
+  id           String    @id @default(uuid())
+  email        String    @unique
+  passwordHash String
+  fullName     String
+  avatarUrl    String?
+  role         UserRole  @default(STAFF)
+  customRoleId String?
+  customRole   CustomRole? @relation(fields: [customRoleId], references: [id])
+  isActive     Boolean   @default(true)
+  lastLoginAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  createdById  String?
+  createdBy    User?     @relation("UserCreatedBy", fields: [createdById], references: [id])
+  createdUsers User[]    @relation("UserCreatedBy")
+
+  permissions           UserPermission[]
+  posts                 Post[]
+  uploadedMedia         Media[]
+  assignedConversations Conversation[]
+  refreshTokens         RefreshToken[]
+
+  @@index([email])
+}
+
+model CustomRole {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  permissions CustomRolePermission[]
+  users       User[]
+}
+
+model CustomRolePermission {
+  customRoleId String
+  permissionId String
+  customRole   CustomRole @relation(fields: [customRoleId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([customRoleId, permissionId])
+}
+
+model Permission {
+  id          String   @id @default(uuid())
+  key         String   @unique
+  group       String
+  description String?
+
+  rolePerms       RolePermission[]
+  userPerms       UserPermission[]
+  customRolePerms CustomRolePermission[]
+}
+
+model RolePermission {
+  role         UserRole
+  permissionId String
+  permission   Permission @relation(fields: [permissionId], references: [id])
+
+  @@id([role, permissionId])
+}
+
+model UserPermission {
+  userId       String
+  permissionId String
+  granted      Boolean    @default(true)
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id])
+
+  @@id([userId, permissionId])
+}
+
+model RefreshToken {
+  id        String    @id @default(uuid())
+  userId    String
+  tokenHash String    @unique
+  expiresAt DateTime
+  revokedAt DateTime?
+  userAgent String?
+  ip        String?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+// ===== POSTS =====
+
+enum PostStatus {
+  DRAFT
+  SCHEDULED
+  PUBLISHED
+  ARCHIVED
+}
+
+model Category {
+  id            String   @id @default(uuid())
+  slug          String   @unique
+  nameVi        String
+  nameEn        String
+  descriptionVi String?
+  descriptionEn String?
+  order         Int      @default(0)
+  createdAt     DateTime @default(now())
+
+  posts Post[]
+}
+
+model Tag {
+  id     String @id @default(uuid())
+  slug   String @unique
+  nameVi String
+  nameEn String
+
+  posts PostTag[]
+}
+
+model Post {
+  id               String     @id @default(uuid())
+  slug             String     @unique
+  titleVi          String
+  titleEn          String
+  excerptVi        String?
+  excerptEn        String?
+  contentVi        String     @db.Text
+  contentEn        String     @db.Text
+  featuredImageId  String?
+  featuredImage    Media?     @relation(fields: [featuredImageId], references: [id])
+  authorId         String
+  author           User       @relation(fields: [authorId], references: [id])
+  categoryId       String?
+  category         Category?  @relation(fields: [categoryId], references: [id])
+  status           PostStatus @default(DRAFT)
+  scheduledAt      DateTime?
+  publishedAt      DateTime?
+  viewCount        Int        @default(0)
+  metaTitleVi      String?
+  metaTitleEn      String?
+  metaDescriptionVi String?
+  metaDescriptionEn String?
+  deletedAt        DateTime?
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+
+  tags PostTag[]
+
+  @@index([status, publishedAt])
+  @@index([authorId])
+}
+
+model PostTag {
+  postId String
+  tagId  String
+  post   Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
+  tag    Tag    @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([postId, tagId])
+}
+
+// ===== MEDIA =====
+
+enum MediaResourceType {
+  IMAGE
+  VIDEO
+  RAW
+}
+
+enum MediaStatus {
+  PENDING
+  CONFIRMED
+}
+
+model Media {
+  id            String            @id @default(uuid())
+  originalName  String
+  mimeType      String
+  size          Int
+  resourceType  MediaResourceType @default(IMAGE)
+  cloudinaryId  String            @unique
+  cloudinaryUrl String?
+  folder        String
+  format        String?
+  width         Int?
+  height        Int?
+  isPrivate     Boolean           @default(false)
+  status        MediaStatus       @default(PENDING)
+  uploadedById  String
+  uploadedBy    User              @relation(fields: [uploadedById], references: [id])
+  createdAt     DateTime          @default(now())
+
+  postsAsFeatured Post[]
+
+  @@index([uploadedById])
+  @@index([folder])
+  @@index([status])
+}
+
+// ===== CHAT =====
+
+enum ConversationStatus {
+  OPEN
+  ASSIGNED
+  CLOSED
+}
+
+enum MessageSenderType {
+  GUEST
+  STAFF
+  SYSTEM
+}
+
+model GuestSession {
+  id          String   @id @default(uuid())
+  displayName String?
+  phone       String?
+  email       String?
+  ipAddress   String?
+  userAgent   String?
+  locale      String   @default("vi")
+  createdAt   DateTime @default(now())
+  lastSeenAt  DateTime @default(now())
+
+  conversations Conversation[]
+
+  @@index([createdAt])
+}
+
+model Conversation {
+  id              String             @id @default(uuid())
+  guestSessionId  String
+  guestSession    GuestSession       @relation(fields: [guestSessionId], references: [id])
+  assignedStaffId String?
+  assignedStaff   User?              @relation(fields: [assignedStaffId], references: [id])
+  status          ConversationStatus @default(OPEN)
+  subject         String?
+  unreadByStaff   Int                @default(0)
+  unreadByGuest   Int                @default(0)
+  lastMessageAt   DateTime           @default(now())
+  createdAt       DateTime           @default(now())
+  closedAt        DateTime?
+
+  messages Message[]
+
+  @@index([status, lastMessageAt])
+  @@index([assignedStaffId])
+}
+
+model Message {
+  id             String            @id @default(uuid())
+  conversationId String
+  conversation   Conversation      @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  senderType     MessageSenderType
+  senderStaffId  String?
+  content        String            @db.Text
+  attachments    Json?
+  readByStaffAt  DateTime?
+  readByGuestAt  DateTime?
+  createdAt      DateTime          @default(now())
+
+  @@index([conversationId, createdAt])
+}
+
+// ===== TRAINERS =====
+
+model Trainer {
+  id          String   @id @default(uuid())
+  nameVi      String
+  nameEn      String
+  titleVi     String
+  titleEn     String
+  bioVi       String   @db.Text
+  bioEn       String   @db.Text
+  avatar      String
+  specialties Json
+  order       Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// ===== TESTIMONIALS =====
+
+model Testimonial {
+  id        String   @id @default(uuid())
+  name      String
+  role      String?
+  contentVi String   @db.Text
+  contentEn String   @db.Text
+  avatar    String?
+  order     Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ===== AUDIT =====
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  userId     String?
+  action     String
+  entityType String?
+  entityId   String?
+  metadata   Json?
+  ipAddress  String?
+  createdAt  DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@index([entityType, entityId])
+}
