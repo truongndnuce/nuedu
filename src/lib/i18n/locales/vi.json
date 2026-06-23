@@ -120,6 +120,20 @@
       "activate": "Kích hoạt",
       "deactivate": "Vô hiệu hóa"
     },
+    "testimonials": {
+      "title": "Feedback học viên",
+      "add": "Thêm feedback",
+      "editTitle": "Sửa feedback",
+      "createTitle": "Thêm feedback mới",
+      "name": "Tên người đánh giá",
+      "role": "Vai trò / Background",
+      "contentVi": "Nội dung (Tiếng Việt)",
+      "contentEn": "Nội dung (English)",
+      "avatar": "URL ảnh đại diện",
+      "order": "Thứ tự hiển thị",
+      "isActive": "Hiển thị trang chủ",
+      "empty": "Chưa có feedback nào"
+    },
     "trainers": {
       "title": "Giảng viên",
       "add": "Thêm giảng viên",

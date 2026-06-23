@@ -22,6 +22,7 @@ import { AppSchedulerModule } from './modules/scheduler/scheduler.module';
 import { TagsModule } from './modules/tags/tags.module';
 import { RolesModule } from './modules/roles/roles.module';
 import { TrainersModule } from './modules/trainers/trainers.module';
+import { TestimonialsModule } from './modules/testimonials/testimonials.module';
 import { UsersModule } from './modules/users/users.module';
 
 @Module({
@@ -51,6 +52,7 @@ import { UsersModule } from './modules/users/users.module';
     TagsModule,
     PostsModule,
     TrainersModule,
+    TestimonialsModule,
     PublicModule,
     ChatModule,
     HealthModule,

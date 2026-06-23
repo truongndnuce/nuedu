@@ -120,6 +120,20 @@
       "activate": "Activate",
       "deactivate": "Deactivate"
     },
+    "testimonials": {
+      "title": "Student feedback",
+      "add": "Add feedback",
+      "editTitle": "Edit feedback",
+      "createTitle": "Add new feedback",
+      "name": "Reviewer name",
+      "role": "Role / Background",
+      "contentVi": "Content (Vietnamese)",
+      "contentEn": "Content (English)",
+      "avatar": "Avatar URL",
+      "order": "Display order",
+      "isActive": "Show on homepage",
+      "empty": "No feedback yet"
+    },
     "trainers": {
       "title": "Trainers",
       "add": "Add trainer",

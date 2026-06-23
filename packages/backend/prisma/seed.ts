@@ -33,6 +33,8 @@ const PERMISSIONS = [
   { key: 'permissions.assign', group: 'users', description: 'Grant/revoke per-user permissions' },
   // trainers
   { key: 'trainers.manage', group: 'trainers', description: 'CRUD trainers' },
+  // testimonials
+  { key: 'testimonials.manage', group: 'testimonials', description: 'CRUD testimonials' },
   // roles
   { key: 'roles.manage', group: 'roles', description: 'Quản lý vai trò tùy chỉnh' },
   // audit
