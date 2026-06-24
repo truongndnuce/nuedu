@@ -175,6 +175,22 @@ export function Sidebar() {
           </Link>
         </PermissionGate>
 
+        {/* Admin-only: System Settings */}
+        <PermissionGate need="settings.manage">
+          <Link
+            href={`/${locale}/portal/settings`}
+            className={cn(
+              "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+              pathname.startsWith(`/${locale}/portal/settings`)
+                ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                : "text-sidebar-foreground/70 hover:bg-sidebar-accent/60 hover:text-sidebar-foreground"
+            )}
+          >
+            <Settings size={16} />
+            Cài đặt hệ thống
+          </Link>
+        </PermissionGate>
+
         {/* Always visible: Account settings */}
         <div className="mt-2 border-t border-sidebar-border pt-2">
           <Link

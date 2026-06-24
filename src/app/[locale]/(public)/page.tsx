@@ -4,6 +4,7 @@ import { Hero } from "@/components/public/Hero";
 import { ServiceCard } from "@/components/public/ServiceCard";
 import { TrainerCard } from "@/components/public/TrainerCard";
 import { TestimonialMarquee } from "@/components/public/TestimonialMarquee";
+import { LeadCapturePopup } from "@/components/public/LeadCapturePopup";
 import type { ApiTrainer } from "@/lib/api/trainers.api";
 import type { ApiTestimonial } from "@/lib/api/testimonials.api";
 import Link from "next/link";
@@ -312,6 +313,7 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
+      <LeadCapturePopup locale={locale} />
     </>
   );
 }
