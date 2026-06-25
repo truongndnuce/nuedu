@@ -25,10 +25,13 @@ interface AuthUser {
 }
 
 const REFRESH_COOKIE = 'nuedu_refresh';
+const IS_PROD = process.env.NODE_ENV === 'production';
+// Cross-site (frontend & backend on different domains) requires SameSite=None,
+// which the browser only accepts together with Secure (HTTPS).
 const COOKIE_OPTIONS = {
   httpOnly: true,
-  secure: process.env.NODE_ENV === 'production',
-  sameSite: 'lax' as const,
+  secure: IS_PROD,
+  sameSite: (IS_PROD ? 'none' : 'lax') as 'none' | 'lax',
   path: '/api/v1/auth',
   maxAge: 7 * 24 * 60 * 60, // 7 days in seconds
 };
