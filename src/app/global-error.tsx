@@ -1,10 +1,10 @@
 "use client";
 
 export default function GlobalError({
-  reset,
+  unstable_retry,
 }: {
   error: Error & { digest?: string };
-  reset: () => void;
+  unstable_retry: () => void;
 }) {
   return (
     <html>
@@ -20,7 +20,7 @@ export default function GlobalError({
         }}
       >
         <h2>Đã xảy ra lỗi</h2>
-        <button onClick={reset}>Thử lại</button>
+        <button onClick={() => unstable_retry()}>Thử lại</button>
       </body>
     </html>
   );
