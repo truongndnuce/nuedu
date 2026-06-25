@@ -68,7 +68,7 @@ export function getUser(id: string): Promise<ApiUser> {
 
 export function updateUser(
   id: string,
-  dto: { fullName?: string; email?: string; role?: UserRole },
+  dto: { fullName?: string; email?: string; role?: UserRole; customRoleId?: string | null },
 ): Promise<ApiUser> {
   return apiFetch(`/users/${id}`, {
     method: "PATCH",
