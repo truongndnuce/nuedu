@@ -119,6 +119,39 @@ export function useAuth() {
     }
   }
 
+  async function register(
+    fullName: string,
+    email: string,
+    password: string,
+  ): Promise<{ ok: boolean; error?: string }> {
+    setLoading(true);
+    try {
+      const res = await fetch(`${API_BASE}/auth/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ fullName, email, password }),
+      });
+
+      if (!res.ok) {
+        setLoading(false);
+        const data = await res.json().catch(() => null);
+        const message = Array.isArray(data?.message)
+          ? data.message.join(", ")
+          : (data?.message as string | undefined);
+        return { ok: false, error: message };
+      }
+
+      const data = await res.json();
+      setAuth(mapApiUser(data.user), data.accessToken);
+      setSessionCookie();
+      return { ok: true };
+    } catch {
+      setLoading(false);
+      return { ok: false };
+    }
+  }
+
   async function logout() {
     try {
       await fetch(`${API_BASE}/auth/logout`, {
@@ -145,6 +178,7 @@ export function useAuth() {
     isLoading,
     isAuthenticated: !!user,
     login,
+    register,
     logout,
     hasPermission: checkPermission,
   };

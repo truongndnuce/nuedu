@@ -16,6 +16,7 @@ import { FastifyReply, FastifyRequest } from 'fastify';
 import { CurrentUser, Public } from '../../common/decorators';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
+import { RegisterDto } from './dto/register.dto';
 
 interface AuthUser {
   id: string;
@@ -36,6 +37,29 @@ const COOKIE_OPTIONS = {
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
+
+  @Public()
+  @Post('register')
+  @HttpCode(HttpStatus.CREATED)
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
+  @ApiOperation({ summary: 'Register a new admin account' })
+  async register(
+    @Body() dto: RegisterDto,
+    @Req() req: FastifyRequest,
+    @Res({ passthrough: true }) res: FastifyReply,
+  ) {
+    const ip = req.ip;
+    const userAgent = req.headers['user-agent'];
+    const { accessToken, refreshToken, user } = await this.authService.register(
+      dto,
+      ip,
+      userAgent,
+    );
+
+    res.setCookie(REFRESH_COOKIE, refreshToken, COOKIE_OPTIONS);
+
+    return { accessToken, user };
+  }
 
   @Public()
   @Post('login')
