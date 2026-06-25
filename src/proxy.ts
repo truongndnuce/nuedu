@@ -7,8 +7,8 @@ const intlMiddleware = createMiddleware(routing);
 export default function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Check portal auth (except login page)
-  const portalPattern = /^\/(?:vi|en)\/portal(?!\/(login))(\/|$)/;
+  // Check portal auth (except login & register pages)
+  const portalPattern = /^\/(?:vi|en)\/portal(?!\/(login|register))(\/|$)/;
   if (portalPattern.test(pathname)) {
     const session = request.cookies.get("nuedu_session");
     if (!session?.value) {

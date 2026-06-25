@@ -10,6 +10,7 @@ import * as argon2 from 'argon2';
 import * as crypto from 'crypto';
 import { PrismaService } from '../../config/prisma.service';
 import { LoginDto } from './dto/login.dto';
+import { RegisterDto } from './dto/register.dto';
 
 @Injectable()
 export class AuthService {
@@ -18,6 +19,49 @@ export class AuthService {
     private jwtService: JwtService,
     private configService: ConfigService,
   ) {}
+
+  async register(dto: RegisterDto, ip?: string, userAgent?: string) {
+    const existing = await this.prisma.user.findUnique({
+      where: { email: dto.email },
+      select: { id: true },
+    });
+    if (existing) throw new BadRequestException('Email đã được sử dụng');
+
+    const passwordHash = await argon2.hash(dto.password, {
+      memoryCost: 19456,
+      timeCost: 2,
+      parallelism: 1,
+    });
+
+    const user = await this.prisma.user.create({
+      data: {
+        email: dto.email,
+        fullName: dto.fullName,
+        passwordHash,
+        role: UserRole.ADMIN,
+      },
+      select: { id: true, email: true, fullName: true, avatarUrl: true, role: true, customRoleId: true },
+    });
+
+    const accessToken = await this.generateAccessToken(user.id, user.role);
+    const refreshToken = await this.createRefreshToken(user.id, ip, userAgent);
+
+    const permissions = await this.getEffectivePermissions(user.id, user.role, user.customRoleId ?? undefined);
+
+    return {
+      accessToken,
+      refreshToken,
+      user: {
+        id: user.id,
+        email: user.email,
+        fullName: user.fullName,
+        avatarUrl: user.avatarUrl,
+        role: user.role,
+        customRoleId: user.customRoleId,
+        permissions,
+      },
+    };
+  }
 
   async login(dto: LoginDto, ip?: string, userAgent?: string) {
     const user = await this.prisma.user.findUnique({
