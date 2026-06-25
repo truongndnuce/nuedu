@@ -24,6 +24,9 @@ import { RolesModule } from './modules/roles/roles.module';
 import { TrainersModule } from './modules/trainers/trainers.module';
 import { TestimonialsModule } from './modules/testimonials/testimonials.module';
 import { UsersModule } from './modules/users/users.module';
+import { MailModule } from './modules/mail/mail.module';
+import { LeadsModule } from './modules/leads/leads.module';
+import { SettingsModule } from './modules/settings/settings.module';
 
 @Module({
   imports: [
@@ -56,6 +59,9 @@ import { UsersModule } from './modules/users/users.module';
     PublicModule,
     ChatModule,
     HealthModule,
+    MailModule,
+    LeadsModule,
+    SettingsModule,
   ],
   providers: [
     PrismaService,

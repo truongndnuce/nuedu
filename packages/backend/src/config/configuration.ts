@@ -34,10 +34,8 @@ export default () => ({
   },
 
   mail: {
-    host: process.env.SMTP_HOST,
-    port: parseInt(process.env.SMTP_PORT ?? '587', 10),
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
-    from: process.env.MAIL_FROM ?? 'no-reply@nuedu.vn',
+    gmailUser: process.env.GMAIL_USER ?? '',
+    gmailAppPassword: process.env.GMAIL_APP_PASSWORD ?? '',
+    from: process.env.MAIL_FROM ?? '',
   },
 });

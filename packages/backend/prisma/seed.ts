@@ -39,6 +39,8 @@ const PERMISSIONS = [
   { key: 'roles.manage', group: 'roles', description: 'Quản lý vai trò tùy chỉnh' },
   // audit
   { key: 'audit.read', group: 'audit', description: 'Read audit logs (admin only)' },
+  // settings
+  { key: 'settings.manage', group: 'settings', description: 'Manage system settings (lead recipients, etc.)' },
 ];
 
 const STAFF_DEFAULT_PERMISSIONS = [
