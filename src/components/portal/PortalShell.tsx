@@ -13,22 +13,56 @@ interface PortalShellProps {
 }
 
 export function PortalShell({ children }: PortalShellProps) {
-  const { user, accessToken, refreshToken, setAuth, setAccessToken, clearAuth } = useAuthStore();
+  // Chỉ subscribe `user` để re-render khi đăng nhập/đăng xuất.
+  // Token được đọc trực tiếp qua getState() trong effect để tránh dùng
+  // giá trị closure cũ (null) khi store chưa rehydrate xong từ localStorage.
+  const user = useAuthStore((s) => s.user);
   const router = useRouter();
   const locale = useLocale();
   const pathname = usePathname();
   const [checking, setChecking] = useState(true);
 
   useEffect(() => {
+    let cancelled = false;
+
     async function restoreSession() {
-      const ok = await tryRefreshSession(accessToken, refreshToken, setAuth, setAccessToken, clearAuth);
+      // Đọc state mới nhất ngay tại thời điểm chạy (sau khi đã rehydrate)
+      const { accessToken, refreshToken, setAuth, setAccessToken, clearAuth } =
+        useAuthStore.getState();
+
+      const ok = await tryRefreshSession(
+        accessToken,
+        refreshToken,
+        setAuth,
+        setAccessToken,
+        clearAuth,
+      );
+
+      if (cancelled) return;
       if (!ok) {
-        router.push(`/${locale}/portal/login?redirect=${encodeURIComponent(pathname)}`);
+        router.push(
+          `/${locale}/portal/login?redirect=${encodeURIComponent(pathname)}`,
+        );
       }
       setChecking(false);
     }
 
-    restoreSession();
+    // Đảm bảo store đã rehydrate xong từ localStorage trước khi restore.
+    if (useAuthStore.persist.hasHydrated()) {
+      restoreSession();
+    } else {
+      const unsub = useAuthStore.persist.onFinishHydration(() => {
+        restoreSession();
+      });
+      return () => {
+        cancelled = true;
+        unsub();
+      };
+    }
+
+    return () => {
+      cancelled = true;
+    };
     // Chỉ chạy 1 lần khi mount
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
