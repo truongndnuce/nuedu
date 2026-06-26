@@ -61,7 +61,7 @@ export class AuthController {
 
     res.setCookie(REFRESH_COOKIE, refreshToken, COOKIE_OPTIONS);
 
-    return { accessToken, user };
+    return { accessToken, refreshToken, user };
   }
 
   @Public()
@@ -84,7 +84,7 @@ export class AuthController {
 
     res.setCookie(REFRESH_COOKIE, refreshToken, COOKIE_OPTIONS);
 
-    return { accessToken, user };
+    return { accessToken, refreshToken, user };
   }
 
   @Public()
@@ -93,10 +93,13 @@ export class AuthController {
   @ApiCookieAuth('refreshToken')
   @ApiOperation({ summary: 'Rotate refresh token and get new access token' })
   async refresh(
+    @Body() body: { refreshToken?: string },
     @Req() req: FastifyRequest,
     @Res({ passthrough: true }) res: FastifyReply,
   ) {
-    const rawToken = (req.cookies as Record<string, string | undefined>)[REFRESH_COOKIE];
+    const rawToken =
+      body?.refreshToken ??
+      (req.cookies as Record<string, string | undefined>)[REFRESH_COOKIE];
     if (!rawToken) throw new UnauthorizedException('No refresh token');
 
     const ip = req.ip;
@@ -109,17 +112,20 @@ export class AuthController {
 
     res.setCookie(REFRESH_COOKIE, refreshToken, COOKIE_OPTIONS);
 
-    return { accessToken };
+    return { accessToken, refreshToken };
   }
 
   @Post('logout')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Logout and revoke refresh token' })
   async logout(
+    @Body() body: { refreshToken?: string },
     @Req() req: FastifyRequest,
     @Res({ passthrough: true }) res: FastifyReply,
   ) {
-    const rawToken = (req.cookies as Record<string, string | undefined>)[REFRESH_COOKIE];
+    const rawToken =
+      body?.refreshToken ??
+      (req.cookies as Record<string, string | undefined>)[REFRESH_COOKIE];
     if (rawToken) {
       await this.authService.logout(rawToken);
     }

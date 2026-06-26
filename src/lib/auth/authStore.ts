@@ -14,8 +14,10 @@ export interface AuthUser {
 interface AuthState {
   user: AuthUser | null;
   accessToken: string | null;
+  refreshToken: string | null;
   isLoading: boolean;
-  setAuth: (user: AuthUser, token: string) => void;
+  setAuth: (user: AuthUser, accessToken: string, refreshToken: string) => void;
+  setAccessToken: (accessToken: string) => void;
   clearAuth: () => void;
   setLoading: (loading: boolean) => void;
 }
@@ -25,15 +27,22 @@ export const useAuthStore = create<AuthState>()(
     (set) => ({
       user: null,
       accessToken: null,
+      refreshToken: null,
       isLoading: false,
-      setAuth: (user, accessToken) => set({ user, accessToken, isLoading: false }),
-      clearAuth: () => set({ user: null, accessToken: null, isLoading: false }),
+      setAuth: (user, accessToken, refreshToken) =>
+        set({ user, accessToken, refreshToken, isLoading: false }),
+      setAccessToken: (accessToken) => set({ accessToken }),
+      clearAuth: () =>
+        set({ user: null, accessToken: null, refreshToken: null, isLoading: false }),
       setLoading: (isLoading) => set({ isLoading }),
     }),
     {
       name: "nuedu-auth",
-      // chỉ persist user và token, không persist isLoading
-      partialize: (state) => ({ user: state.user, accessToken: state.accessToken }),
+      partialize: (state) => ({
+        user: state.user,
+        accessToken: state.accessToken,
+        refreshToken: state.refreshToken,
+      }),
     },
   ),
 );

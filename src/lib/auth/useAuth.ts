@@ -7,17 +7,6 @@ import { hasPermission } from "@/lib/permissions";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000/api/v1";
 
-// 7 ngày — khớp với refresh token TTL
-const SESSION_COOKIE_MAX_AGE = 7 * 24 * 60 * 60;
-
-function setSessionCookie() {
-  document.cookie = `nuedu_session=1; path=/; max-age=${SESSION_COOKIE_MAX_AGE}`;
-}
-
-function clearSessionCookie() {
-  document.cookie = "nuedu_session=; path=/; max-age=0";
-}
-
 function mapApiUser(apiUser: Record<string, unknown>): AuthUser {
   return {
     id: apiUser.id as string,
@@ -28,22 +17,30 @@ function mapApiUser(apiUser: Record<string, unknown>): AuthUser {
   };
 }
 
+/**
+ * Kiểm tra access token hiện tại còn hợp lệ không.
+ * Nếu hết hạn → dùng refreshToken (localStorage) để lấy access token mới.
+ * Trả về true nếu session được khôi phục thành công.
+ */
 export async function tryRefreshSession(
-  currentToken: string | null,
-  setAuth: (user: AuthUser, token: string) => void,
+  currentAccessToken: string | null,
+  currentRefreshToken: string | null,
+  setAuth: (user: AuthUser, accessToken: string, refreshToken: string) => void,
+  setAccessToken: (accessToken: string) => void,
   clearAuth: () => void,
 ): Promise<boolean> {
-  // Thử validate access token hiện tại trước
-  if (currentToken) {
+  // Thử validate access token hiện tại
+  if (currentAccessToken) {
     try {
       const res = await fetch(`${API_BASE}/auth/me`, {
-        headers: { Authorization: `Bearer ${currentToken}` },
+        headers: { Authorization: `Bearer ${currentAccessToken}` },
         credentials: "include",
       });
       if (res.ok) {
         const user = await res.json();
-        setAuth(mapApiUser(user), currentToken);
-        setSessionCookie();
+        // User vẫn hợp lệ — cập nhật user data nhưng giữ nguyên tokens
+        const { refreshToken } = useAuthStore.getState();
+        setAuth(mapApiUser(user), currentAccessToken, refreshToken ?? "");
         return true;
       }
     } catch {
@@ -51,45 +48,49 @@ export async function tryRefreshSession(
     }
   }
 
-  // Access token hết hạn hoặc không có → dùng refresh token cookie
+  // Access token hết hạn hoặc không có → dùng refresh token từ localStorage
+  if (!currentRefreshToken) {
+    clearAuth();
+    return false;
+  }
+
   try {
     const refreshRes = await fetch(`${API_BASE}/auth/refresh`, {
       method: "POST",
-      credentials: "include", // gửi cookie nuedu_refresh (httpOnly)
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ refreshToken: currentRefreshToken }),
     });
 
     if (!refreshRes.ok) {
       clearAuth();
-      clearSessionCookie();
       return false;
     }
 
-    const { accessToken: newToken } = await refreshRes.json();
+    const { accessToken: newAccessToken, refreshToken: newRefreshToken } =
+      await refreshRes.json();
 
     const meRes = await fetch(`${API_BASE}/auth/me`, {
-      headers: { Authorization: `Bearer ${newToken}` },
+      headers: { Authorization: `Bearer ${newAccessToken}` },
       credentials: "include",
     });
 
     if (!meRes.ok) {
       clearAuth();
-      clearSessionCookie();
       return false;
     }
 
     const user = await meRes.json();
-    setAuth(mapApiUser(user), newToken);
-    setSessionCookie();
+    setAuth(mapApiUser(user), newAccessToken, newRefreshToken);
     return true;
   } catch {
     clearAuth();
-    clearSessionCookie();
     return false;
   }
 }
 
 export function useAuth() {
-  const { user, accessToken, isLoading, setAuth, clearAuth, setLoading } =
+  const { user, accessToken, refreshToken, isLoading, setAuth, setAccessToken, clearAuth, setLoading } =
     useAuthStore();
   const router = useRouter();
   const locale = useLocale();
@@ -110,8 +111,7 @@ export function useAuth() {
       }
 
       const data = await res.json();
-      setAuth(mapApiUser(data.user), data.accessToken);
-      setSessionCookie();
+      setAuth(mapApiUser(data.user), data.accessToken, data.refreshToken);
       return true;
     } catch {
       setLoading(false);
@@ -143,8 +143,7 @@ export function useAuth() {
       }
 
       const data = await res.json();
-      setAuth(mapApiUser(data.user), data.accessToken);
-      setSessionCookie();
+      setAuth(mapApiUser(data.user), data.accessToken, data.refreshToken);
       return { ok: true };
     } catch {
       setLoading(false);
@@ -157,13 +156,16 @@ export function useAuth() {
       await fetch(`${API_BASE}/auth/logout`, {
         method: "POST",
         credentials: "include",
-        headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
+        headers: {
+          "Content-Type": "application/json",
+          ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+        },
+        body: JSON.stringify({ refreshToken }),
       });
     } catch {
       // ignore network errors
     }
     clearAuth();
-    clearSessionCookie();
     router.push(`/${locale}/portal/login`);
   }
 
@@ -175,6 +177,7 @@ export function useAuth() {
   return {
     user,
     accessToken,
+    refreshToken,
     isLoading,
     isAuthenticated: !!user,
     login,

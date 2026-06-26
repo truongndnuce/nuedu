@@ -38,8 +38,9 @@ export async function apiFetch<T>(
   let res = await doFetch(accessToken);
 
   if (res.status === 401) {
-    const { accessToken: tok, setAuth, clearAuth } = useAuthStore.getState();
-    const ok = await tryRefreshSession(tok, setAuth, clearAuth);
+    const { accessToken: tok, refreshToken, setAuth, setAccessToken, clearAuth } =
+      useAuthStore.getState();
+    const ok = await tryRefreshSession(tok, refreshToken, setAuth, setAccessToken, clearAuth);
     if (ok) {
       res = await doFetch(useAuthStore.getState().accessToken);
     }

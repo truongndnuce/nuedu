@@ -13,7 +13,7 @@ interface PortalShellProps {
 }
 
 export function PortalShell({ children }: PortalShellProps) {
-  const { user, accessToken, setAuth, clearAuth } = useAuthStore();
+  const { user, accessToken, refreshToken, setAuth, setAccessToken, clearAuth } = useAuthStore();
   const router = useRouter();
   const locale = useLocale();
   const pathname = usePathname();
@@ -21,9 +21,7 @@ export function PortalShell({ children }: PortalShellProps) {
 
   useEffect(() => {
     async function restoreSession() {
-      // Nếu đã có user trong store (từ localStorage persist) → validate nhanh
-      // Nếu không → thử refresh token
-      const ok = await tryRefreshSession(accessToken, setAuth, clearAuth);
+      const ok = await tryRefreshSession(accessToken, refreshToken, setAuth, setAccessToken, clearAuth);
       if (!ok) {
         router.push(`/${locale}/portal/login?redirect=${encodeURIComponent(pathname)}`);
       }
