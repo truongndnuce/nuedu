@@ -31,4 +31,5 @@ ENV NODE_ENV=production
 WORKDIR /app/packages/backend
 EXPOSE 4000
 # Apply pending migrations, then start. prisma CLI ships in node_modules.
-CMD ["sh", "-c", "pnpm exec prisma migrate deploy && node dist/main"]
+# nest build emits to dist/src/main.js (the prisma/ dir keeps the src/ subpath).
+CMD ["sh", "-c", "pnpm exec prisma migrate deploy && node dist/src/main"]
