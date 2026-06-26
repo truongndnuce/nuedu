@@ -7,7 +7,7 @@ import { updateSelfProfile } from "@/lib/api/users.api";
 
 export default function AccountPage() {
   const { user } = useAuth();
-  const { setAuth, accessToken } = useAuthStore();
+  const { setAuth, accessToken, refreshToken } = useAuthStore();
 
   const [activeTab, setActiveTab] = useState<"profile" | "security">("profile");
 
@@ -33,8 +33,8 @@ export default function AccountPage() {
     try {
       await updateSelfProfile({ fullName: fullName.trim() });
       // Update the local auth store so Topbar reflects new name immediately
-      if (user && accessToken) {
-        setAuth({ ...user, name: fullName.trim() }, accessToken);
+      if (user && accessToken && refreshToken) {
+        setAuth({ ...user, name: fullName.trim() }, accessToken, refreshToken);
       }
       setProfileSuccess(true);
     } catch (e: unknown) {
