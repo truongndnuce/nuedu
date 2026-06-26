@@ -7,6 +7,17 @@ import { hasPermission } from "@/lib/permissions";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000/api/v1";
 
+// 7 ngày — khớp với refresh token TTL, dùng để middleware server-side check
+const SESSION_COOKIE_MAX_AGE = 7 * 24 * 60 * 60;
+
+function setSessionCookie() {
+  document.cookie = `nuedu_session=1; path=/; max-age=${SESSION_COOKIE_MAX_AGE}`;
+}
+
+function clearSessionCookie() {
+  document.cookie = "nuedu_session=; path=/; max-age=0";
+}
+
 function mapApiUser(apiUser: Record<string, unknown>): AuthUser {
   return {
     id: apiUser.id as string,
@@ -38,9 +49,9 @@ export async function tryRefreshSession(
       });
       if (res.ok) {
         const user = await res.json();
-        // User vẫn hợp lệ — cập nhật user data nhưng giữ nguyên tokens
         const { refreshToken } = useAuthStore.getState();
         setAuth(mapApiUser(user), currentAccessToken, refreshToken ?? "");
+        setSessionCookie();
         return true;
       }
     } catch {
@@ -51,6 +62,7 @@ export async function tryRefreshSession(
   // Access token hết hạn hoặc không có → dùng refresh token từ localStorage
   if (!currentRefreshToken) {
     clearAuth();
+    clearSessionCookie();
     return false;
   }
 
@@ -82,9 +94,11 @@ export async function tryRefreshSession(
 
     const user = await meRes.json();
     setAuth(mapApiUser(user), newAccessToken, newRefreshToken);
+    setSessionCookie();
     return true;
   } catch {
     clearAuth();
+    clearSessionCookie();
     return false;
   }
 }
@@ -112,6 +126,7 @@ export function useAuth() {
 
       const data = await res.json();
       setAuth(mapApiUser(data.user), data.accessToken, data.refreshToken);
+      setSessionCookie();
       return true;
     } catch {
       setLoading(false);
@@ -144,6 +159,7 @@ export function useAuth() {
 
       const data = await res.json();
       setAuth(mapApiUser(data.user), data.accessToken, data.refreshToken);
+      setSessionCookie();
       return { ok: true };
     } catch {
       setLoading(false);
@@ -166,6 +182,7 @@ export function useAuth() {
       // ignore network errors
     }
     clearAuth();
+    clearSessionCookie();
     router.push(`/${locale}/portal/login`);
   }
 
