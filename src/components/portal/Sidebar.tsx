@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import NextImage from "next/image";
 import { useLocale } from "next-intl";
 import { usePathname } from "next/navigation";
 import {
@@ -78,9 +79,16 @@ export function Sidebar() {
   return (
     <aside className="flex h-full w-60 shrink-0 flex-col bg-sidebar text-sidebar-foreground">
       {/* Logo */}
-      <div className="flex h-16 items-center px-5 border-b border-sidebar-border">
+      <div className="flex h-16 items-center gap-2 px-5 border-b border-sidebar-border">
+        <NextImage
+          src="/images/logo.png"
+          alt="NUEDU"
+          width={32}
+          height={32}
+          className="h-8 w-8 object-contain"
+        />
         <span className="text-lg font-bold text-sidebar-primary">NUEDU</span>
-        <span className="ml-1 text-xs text-sidebar-foreground/50">Portal</span>
+        <span className="text-xs text-sidebar-foreground/50">Portal</span>
       </div>
 
       {/* Nav */}

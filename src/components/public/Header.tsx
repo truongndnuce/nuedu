@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useTranslations, useLocale } from "next-intl";
 import { useRouter, usePathname } from "next/navigation";
 import { useState } from "react";
@@ -31,6 +32,14 @@ export function Header() {
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
         {/* Logo */}
         <Link href={`/${locale}`} className="flex items-center gap-2">
+          <Image
+            src="/images/logo.png"
+            alt="NUEDU"
+            width={40}
+            height={40}
+            priority
+            className="h-10 w-10 object-contain"
+          />
           <span className="text-xl font-bold text-primary">NUEDU</span>
         </Link>
 

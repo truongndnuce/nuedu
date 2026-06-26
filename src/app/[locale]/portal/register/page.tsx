@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useLocale } from "next-intl";
 import { useForm } from "react-hook-form";
@@ -54,6 +55,14 @@ export default function RegisterPage() {
       <div className="w-full max-w-sm">
         {/* Logo */}
         <div className="mb-8 text-center">
+          <Image
+            src="/images/logo.png"
+            alt="NUEDU"
+            width={80}
+            height={80}
+            priority
+            className="mx-auto mb-2 h-20 w-20 object-contain"
+          />
           <span className="text-3xl font-bold text-primary">NUEDU</span>
           <p className="mt-1 text-sm text-muted-foreground">Portal quản lý</p>
         </div>

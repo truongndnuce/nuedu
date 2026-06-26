@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { useTranslations, useLocale } from "next-intl";
 
 export function Footer() {
@@ -11,7 +12,16 @@ export function Footer() {
         <div className="grid gap-8 md:grid-cols-3">
           {/* Brand */}
           <div>
-            <span className="text-xl font-bold">NUEDU</span>
+            <div className="flex items-center gap-2">
+              <Image
+                src="/images/logo.png"
+                alt="NUEDU"
+                width={40}
+                height={40}
+                className="h-10 w-10 object-contain bg-white rounded-md p-0.5"
+              />
+              <span className="text-xl font-bold">NUEDU</span>
+            </div>
             <p className="mt-3 text-sm text-primary-foreground/70 leading-relaxed">
               {locale === "vi"
                 ? "Trung tâm đào tạo thể lực và sức khỏe chuyên nghiệp."
