@@ -38,7 +38,9 @@ export class AuthService {
         email: dto.email,
         fullName: dto.fullName,
         passwordHash,
-        role: UserRole.ADMIN,
+        // Đăng ký tự phục vụ chỉ tạo tài khoản cấp nhân viên.
+        // Nâng quyền ADMIN phải do admin thực hiện thủ công.
+        role: UserRole.STAFF,
       },
       select: { id: true, email: true, fullName: true, avatarUrl: true, role: true, customRoleId: true },
     });
