@@ -9,6 +9,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useAuth } from "@/lib/auth/useAuth";
+import { useAuthStore } from "@/lib/auth/authStore";
 
 const registerSchema = z
   .object({
@@ -26,6 +27,7 @@ type RegisterForm = z.infer<typeof registerSchema>;
 
 export default function RegisterPage() {
   const { register: registerAccount, isLoading } = useAuth();
+  const hasHydrated = useAuthStore((s) => s.hasHydrated);
   const router = useRouter();
   const locale = useLocale();
   const [error, setError] = useState("");
@@ -37,6 +39,8 @@ export default function RegisterPage() {
   } = useForm<RegisterForm>({ resolver: zodResolver(registerSchema) });
 
   async function onSubmit(data: RegisterForm) {
+    // Chặn đến khi store rehydrate xong (xem ghi chú ở trang login).
+    if (!hasHydrated) return;
     setError("");
     const { ok, error: apiError } = await registerAccount(
       data.fullName,
@@ -149,7 +153,7 @@ export default function RegisterPage() {
 
             <button
               type="submit"
-              disabled={isLoading}
+              disabled={isLoading || !hasHydrated}
               className="w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-60 transition-colors"
             >
               {isLoading ? "Đang đăng ký..." : "Đăng ký"}

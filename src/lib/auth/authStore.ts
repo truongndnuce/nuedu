@@ -16,10 +16,15 @@ interface AuthState {
   accessToken: string | null;
   refreshToken: string | null;
   isLoading: boolean;
+  // true sau khi store đã rehydrate xong từ localStorage. Dùng để chặn
+  // thao tác (vd: bấm đăng nhập) trước khi hydrate xong — tránh việc
+  // rehydration ghi đè lại state vừa set, khiến đăng nhập "không ăn".
+  hasHydrated: boolean;
   setAuth: (user: AuthUser, accessToken: string, refreshToken: string) => void;
   setAccessToken: (accessToken: string) => void;
   clearAuth: () => void;
   setLoading: (loading: boolean) => void;
+  setHasHydrated: (hydrated: boolean) => void;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -29,12 +34,14 @@ export const useAuthStore = create<AuthState>()(
       accessToken: null,
       refreshToken: null,
       isLoading: false,
+      hasHydrated: false,
       setAuth: (user, accessToken, refreshToken) =>
         set({ user, accessToken, refreshToken, isLoading: false }),
       setAccessToken: (accessToken) => set({ accessToken }),
       clearAuth: () =>
         set({ user: null, accessToken: null, refreshToken: null, isLoading: false }),
       setLoading: (isLoading) => set({ isLoading }),
+      setHasHydrated: (hasHydrated) => set({ hasHydrated }),
     }),
     {
       name: "nuedu-auth",
@@ -43,6 +50,10 @@ export const useAuthStore = create<AuthState>()(
         accessToken: state.accessToken,
         refreshToken: state.refreshToken,
       }),
+      onRehydrateStorage: () => (state) => {
+        // Gọi sau khi rehydrate hoàn tất (kể cả khi localStorage rỗng)
+        state?.setHasHydrated(true);
+      },
     },
   ),
 );

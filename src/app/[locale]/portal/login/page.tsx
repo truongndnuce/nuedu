@@ -9,6 +9,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useAuth } from "@/lib/auth/useAuth";
+import { useAuthStore } from "@/lib/auth/authStore";
 
 const loginSchema = z.object({
   email: z.string().email(),
@@ -19,6 +20,7 @@ type LoginForm = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
   const { login, isLoading } = useAuth();
+  const hasHydrated = useAuthStore((s) => s.hasHydrated);
   const router = useRouter();
   const searchParams = useSearchParams();
   const locale = useLocale();
@@ -31,6 +33,9 @@ export default function LoginPage() {
   } = useForm<LoginForm>({ resolver: zodResolver(loginSchema) });
 
   async function onSubmit(data: LoginForm) {
+    // Chặn đến khi store rehydrate xong, nếu không rehydration sẽ ghi đè
+    // lại state vừa đăng nhập (khiến login "không ăn" ở lần đầu).
+    if (!hasHydrated) return;
     setError("");
     const ok = await login(data.email, data.password);
     if (ok) {
@@ -106,7 +111,7 @@ export default function LoginPage() {
 
             <button
               type="submit"
-              disabled={isLoading}
+              disabled={isLoading || !hasHydrated}
               className="w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-60 transition-colors"
             >
               {isLoading ? "Đang đăng nhập..." : "Đăng nhập"}
