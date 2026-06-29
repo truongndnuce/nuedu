@@ -1,7 +1,7 @@
 "use client";
 
 import { useAuthStore } from "@/lib/auth/authStore";
-import { tryRefreshSession } from "@/lib/auth/useAuth";
+import { refreshSessionOnce } from "@/lib/auth/useAuth";
 
 const API_BASE =
   process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000/api/v1";
@@ -38,9 +38,8 @@ export async function apiFetch<T>(
   let res = await doFetch(accessToken);
 
   if (res.status === 401) {
-    const { accessToken: tok, refreshToken, setAuth, setAccessToken, clearAuth } =
-      useAuthStore.getState();
-    const ok = await tryRefreshSession(tok, refreshToken, setAuth, setAccessToken, clearAuth);
+    // Gom mọi 401 song song về một lần refresh duy nhất (tránh đua refresh token).
+    const ok = await refreshSessionOnce();
     if (ok) {
       res = await doFetch(useAuthStore.getState().accessToken);
     }

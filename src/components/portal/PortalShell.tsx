@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useLocale } from "next-intl";
 import { useAuthStore } from "@/lib/auth/authStore";
-import { tryRefreshSession } from "@/lib/auth/useAuth";
+import { refreshSessionOnce } from "@/lib/auth/useAuth";
 import { Sidebar } from "./Sidebar";
 import { Topbar } from "./Topbar";
 
@@ -26,17 +26,9 @@ export function PortalShell({ children }: PortalShellProps) {
     let cancelled = false;
 
     async function restoreSession() {
-      // Đọc state mới nhất ngay tại thời điểm chạy (sau khi đã rehydrate)
-      const { accessToken, refreshToken, setAuth, setAccessToken, clearAuth } =
-        useAuthStore.getState();
-
-      const ok = await tryRefreshSession(
-        accessToken,
-        refreshToken,
-        setAuth,
-        setAccessToken,
-        clearAuth,
-      );
+      // Dùng chung single-flight refresh để không đua với các apiFetch khác
+      // cùng lúc (cùng một refresh token).
+      const ok = await refreshSessionOnce();
 
       if (cancelled) return;
       if (!ok) {

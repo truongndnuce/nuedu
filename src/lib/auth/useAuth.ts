@@ -103,6 +103,34 @@ export async function tryRefreshSession(
   }
 }
 
+/**
+ * Single-flight refresh: khi access token hết hạn, nhiều request song song
+ * (vd: trang Settings gọi `me`, `lead-recipients`... cùng lúc) sẽ đồng loạt
+ * nhận 401. Nếu mỗi request tự gọi `/auth/refresh` với cùng một refresh token,
+ * backend xoay vòng (rotate) token sẽ chỉ chấp nhận lần đầu và vô hiệu hóa các
+ * lần sau → người dùng bị đá ra. Hàm này gom tất cả về MỘT lần refresh duy nhất:
+ * request đầu thực hiện refresh, các request còn lại chờ chung kết quả đó.
+ */
+let inFlightRefresh: Promise<boolean> | null = null;
+
+export function refreshSessionOnce(): Promise<boolean> {
+  if (!inFlightRefresh) {
+    const { accessToken, refreshToken, setAuth, setAccessToken, clearAuth } =
+      useAuthStore.getState();
+    inFlightRefresh = tryRefreshSession(
+      accessToken,
+      refreshToken,
+      setAuth,
+      setAccessToken,
+      clearAuth,
+    ).finally(() => {
+      // Reset để lần access token hết hạn tiếp theo vẫn refresh được.
+      inFlightRefresh = null;
+    });
+  }
+  return inFlightRefresh;
+}
+
 export function useAuth() {
   const { user, accessToken, refreshToken, isLoading, setAuth, setAccessToken, clearAuth, setLoading } =
     useAuthStore();
