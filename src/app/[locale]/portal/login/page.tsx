@@ -39,9 +39,12 @@ export default function LoginPage() {
     setError("");
     const ok = await login(data.email, data.password);
     if (ok) {
-      const redirect = searchParams.get("redirect") ?? `/${locale}/portal/dashboard`;
-      router.refresh();
-      router.push(redirect);
+      const rawRedirect = searchParams.get("redirect") ?? "";
+      const redirect =
+        rawRedirect.startsWith("/") && !rawRedirect.startsWith("//")
+          ? rawRedirect
+          : `/${locale}/portal/dashboard`;
+      window.location.href = redirect;
     } else {
       setError("Email hoặc mật khẩu không đúng");
     }
