@@ -40,6 +40,7 @@ export default function LoginPage() {
     const ok = await login(data.email, data.password);
     if (ok) {
       const redirect = searchParams.get("redirect") ?? `/${locale}/portal/dashboard`;
+      router.refresh();
       router.push(redirect);
     } else {
       setError("Email hoặc mật khẩu không đúng");
