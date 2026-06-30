@@ -45,10 +45,23 @@ export const useAuthStore = create<AuthState>()(
     }),
     {
       name: "nuedu-auth",
+      // Chỉ persist token, KHÔNG persist `user`. Việc này giúp phân biệt rõ:
+      //  - Vừa đăng nhập qua client-side navigation → `user` có trong memory
+      //    (chưa bị ghi vào localStorage) → guard tin tưởng luôn, không cần
+      //    re-validate qua mạng.
+      //  - Cold load (refresh trang / vào URL trực tiếp) → `user` = null →
+      //    phải khôi phục qua /auth/me + refresh, đúng như cũ.
       partialize: (state) => ({
-        user: state.user,
         accessToken: state.accessToken,
         refreshToken: state.refreshToken,
+      }),
+      // Luôn ép `user = null` khi rehydrate (dù localStorage cũ còn lưu user).
+      // Nhờ vậy cold load luôn đi qua luồng khôi phục session, và tránh dùng
+      // `user` thừa kế từ phiên bản store trước đây (khi user còn được persist).
+      merge: (persisted, current) => ({
+        ...current,
+        ...(persisted as Partial<AuthState>),
+        user: null,
       }),
       onRehydrateStorage: () => (state) => {
         // Gọi sau khi rehydrate hoàn tất (kể cả khi localStorage rỗng)

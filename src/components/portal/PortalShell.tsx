@@ -26,8 +26,20 @@ export function PortalShell({ children }: PortalShellProps) {
     let cancelled = false;
 
     async function restoreSession() {
-      // Dùng chung single-flight refresh để không đua với các apiFetch khác
-      // cùng lúc (cùng một refresh token).
+      // Đọc state mới nhất ngay tại thời điểm chạy (sau khi đã rehydrate).
+      const { user, accessToken } = useAuthStore.getState();
+
+      // Vừa đăng nhập qua client-side navigation: session đã hợp lệ trong
+      // memory → dùng luôn, KHÔNG gọi lại /auth/me. Việc re-validate qua mạng
+      // ngay sau đăng nhập từng khiến người dùng bị đá ra login khi /auth/me
+      // có lỗi/hang nhất thời, dù token vừa cấp hoàn toàn còn hiệu lực.
+      if (user && accessToken) {
+        setChecking(false);
+        return;
+      }
+
+      // Cold load (refresh trang / vào thẳng URL): khôi phục session từ
+      // token lưu trong localStorage qua single-flight refresh.
       const ok = await refreshSessionOnce();
 
       if (cancelled) return;
@@ -35,6 +47,7 @@ export function PortalShell({ children }: PortalShellProps) {
         router.push(
           `/${locale}/portal/login?redirect=${encodeURIComponent(pathname)}`,
         );
+        return;
       }
       setChecking(false);
     }
