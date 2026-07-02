@@ -115,7 +115,10 @@ export class MediaService {
   async delete(mediaId: string, userId: string, canDeleteAny: boolean) {
     const media = await this.prisma.media.findUnique({
       where: { id: mediaId },
-      include: { postsAsFeatured: { select: { id: true } } },
+      include: {
+        postsAsFeatured: { select: { id: true } },
+        postImages: { select: { id: true } },
+      },
     });
     if (!media) throw new NotFoundException('Media not found');
 
@@ -123,8 +126,8 @@ export class MediaService {
       throw new ForbiddenException('You can only delete your own uploads');
     }
 
-    if (media.postsAsFeatured.length > 0) {
-      throw new BadRequestException('Cannot delete media used as a featured image in posts');
+    if (media.postsAsFeatured.length > 0 || media.postImages.length > 0) {
+      throw new BadRequestException('Cannot delete media used as an image in posts');
     }
 
     const resourceTypeMap: Record<MediaResourceType, 'image' | 'video' | 'raw'> = {

@@ -49,7 +49,7 @@ export default function EditPostPage({
   const [seoOpen, setSeoOpen] = useState(false);
   const [post, setPost] = useState<ApiPost | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [featuredImage, setFeaturedImage] = useState<FeaturedImageResult | undefined>();
+  const [images, setImages] = useState<FeaturedImageResult[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -75,8 +75,8 @@ export default function EditPostPage({
       .then(([p, cats]) => {
         setPost(p);
         setCategories(cats);
-        if (p.featuredImage) {
-          setFeaturedImage({ mediaId: p.featuredImage.id, url: p.featuredImage.cloudinaryUrl });
+        if (p.images?.length) {
+          setImages(p.images.map((img) => ({ mediaId: img.id, url: img.cloudinaryUrl })));
         }
         form.reset({
           titleVi: p.titleVi,
@@ -114,7 +114,7 @@ export default function EditPostPage({
         contentVi: data.contentVi,
         contentEn: data.contentEn || data.contentVi,
         categoryId: data.categoryId || undefined,
-        featuredImageId: featuredImage?.mediaId || undefined,
+        imageIds: images.map((img) => img.mediaId),
         metaTitleVi: data.metaTitleVi,
         metaDescriptionVi: data.metaDescriptionVi,
       });
@@ -147,7 +147,7 @@ export default function EditPostPage({
         contentVi: data.contentVi,
         contentEn: data.contentEn || data.contentVi,
         categoryId: data.categoryId || undefined,
-        featuredImageId: featuredImage?.mediaId || undefined,
+        imageIds: images.map((img) => img.mediaId),
         metaTitleVi: data.metaTitleVi,
         metaDescriptionVi: data.metaDescriptionVi,
       });
@@ -351,11 +351,11 @@ export default function EditPostPage({
 
           <div className="rounded-xl border border-border bg-card p-4 space-y-2">
             <h3 className="text-sm font-semibold text-foreground">
-              Ảnh đại diện
+              Ảnh bài viết
             </h3>
             <FeaturedImagePicker
-              previewUrl={featuredImage?.url}
-              onChange={setFeaturedImage}
+              images={images}
+              onChange={setImages}
             />
           </div>
         </div>

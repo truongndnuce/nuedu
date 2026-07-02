@@ -43,10 +43,14 @@ export class CreatePostDto {
   @IsOptional()
   tagIds?: string[];
 
-  @ApiPropertyOptional()
-  @IsUUID()
+  @ApiPropertyOptional({
+    type: [String],
+    description: 'Ordered list of Media ids to attach as post images. The first image is used as the cover/featured image.',
+  })
+  @IsArray()
+  @IsUUID('all', { each: true })
   @IsOptional()
-  featuredImageId?: string;
+  imageIds?: string[];
 
   @ApiPropertyOptional()
   @IsString()

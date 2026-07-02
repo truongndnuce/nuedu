@@ -19,6 +19,7 @@ export interface ApiPost {
   author: { id: string; fullName: string };
   category: { id: string; slug: string; nameVi: string; nameEn: string } | null;
   featuredImage: { id: string; cloudinaryUrl: string } | null;
+  images: { id: string; cloudinaryUrl: string }[];
   tags: { id: string; slug: string; nameVi: string; nameEn: string }[];
   metaTitleVi?: string;
   metaTitleEn?: string;
@@ -60,7 +61,7 @@ export function createPost(dto: {
   contentEn?: string;
   categoryId?: string;
   tagIds?: string[];
-  featuredImageId?: string;
+  imageIds?: string[];
   metaTitleVi?: string;
   metaTitleEn?: string;
   metaDescriptionVi?: string;
@@ -79,7 +80,7 @@ export function updatePost(
     contentVi?: string;
     contentEn?: string;
     categoryId?: string;
-    featuredImageId?: string;
+    imageIds?: string[];
     metaTitleVi?: string;
     metaTitleEn?: string;
     metaDescriptionVi?: string;

@@ -36,6 +36,10 @@ const POST_SELECT = {
   author: { select: { id: true, fullName: true, avatarUrl: true } },
   category: { select: { id: true, slug: true, nameVi: true, nameEn: true } },
   featuredImage: { select: { id: true, cloudinaryId: true, cloudinaryUrl: true, format: true, width: true, height: true } },
+  images: {
+    orderBy: { order: 'asc' as const },
+    select: { media: { select: { id: true, cloudinaryId: true, cloudinaryUrl: true, format: true, width: true, height: true } } },
+  },
   tags: { select: { tag: { select: { id: true, slug: true, nameVi: true, nameEn: true } } } },
 };
 
@@ -59,7 +63,7 @@ export class PostsService {
         contentVi: sanitizePostContent(dto.contentVi ?? ''),
         contentEn: sanitizePostContent(dto.contentEn ?? ''),
         categoryId: dto.categoryId,
-        featuredImageId: dto.featuredImageId,
+        featuredImageId: dto.imageIds?.[0],
         authorId,
         metaTitleVi: dto.metaTitleVi,
         metaTitleEn: dto.metaTitleEn,
@@ -68,6 +72,9 @@ export class PostsService {
         status: PostStatus.DRAFT,
         ...(dto.tagIds?.length && {
           tags: { create: dto.tagIds.map((tagId) => ({ tagId })) },
+        }),
+        ...(dto.imageIds?.length && {
+          images: { create: dto.imageIds.map((mediaId, order) => ({ mediaId, order })) },
         }),
       },
       select: POST_SELECT,
@@ -147,6 +154,15 @@ export class PostsService {
         }
       }
 
+      if (dto.imageIds !== undefined) {
+        await tx.postImage.deleteMany({ where: { postId: id } });
+        if (dto.imageIds.length > 0) {
+          await tx.postImage.createMany({
+            data: dto.imageIds.map((mediaId, order) => ({ postId: id, mediaId, order })),
+          });
+        }
+      }
+
       return tx.post.update({
         where: { id },
         data: {
@@ -157,7 +173,7 @@ export class PostsService {
           ...(dto.contentVi !== undefined && { contentVi: sanitizePostContent(dto.contentVi) }),
           ...(dto.contentEn !== undefined && { contentEn: sanitizePostContent(dto.contentEn) }),
           ...(dto.categoryId !== undefined && { categoryId: dto.categoryId }),
-          ...(dto.featuredImageId !== undefined && { featuredImageId: dto.featuredImageId }),
+          ...(dto.imageIds !== undefined && { featuredImageId: dto.imageIds[0] ?? null }),
           ...(slug && { slug }),
           ...(dto.metaTitleVi !== undefined && { metaTitleVi: dto.metaTitleVi }),
           ...(dto.metaTitleEn !== undefined && { metaTitleEn: dto.metaTitleEn }),
@@ -285,6 +301,7 @@ export class PostsService {
     return {
       ...post,
       tags: post.tags?.map((pt: any) => pt.tag) ?? [],
+      images: post.images?.map((pi: any) => pi.media) ?? [],
     };
   }
 }

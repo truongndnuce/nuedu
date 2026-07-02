@@ -33,7 +33,7 @@ export default function NewPostPage() {
   const [activeTab, setActiveTab] = useState<"vi" | "en">("vi");
   const [seoOpen, setSeoOpen] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [featuredImage, setFeaturedImage] = useState<FeaturedImageResult | undefined>();
+  const [images, setImages] = useState<FeaturedImageResult[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [scheduling, setScheduling] = useState(false);
@@ -62,7 +62,7 @@ export default function NewPostPage() {
       contentVi: data.contentVi,
       contentEn: data.contentEn || data.contentVi,
       categoryId: data.categoryId || undefined,
-      featuredImageId: featuredImage?.mediaId,
+      imageIds: images.map((img) => img.mediaId),
       metaTitleVi: data.metaTitleVi,
       metaDescriptionVi: data.metaDescriptionVi,
     };
@@ -272,11 +272,11 @@ export default function NewPostPage() {
 
           <div className="rounded-xl border border-border bg-card p-4 space-y-2">
             <h3 className="text-sm font-semibold text-foreground">
-              Ảnh đại diện
+              Ảnh bài viết
             </h3>
             <FeaturedImagePicker
-              previewUrl={featuredImage?.url}
-              onChange={setFeaturedImage}
+              images={images}
+              onChange={setImages}
             />
           </div>
         </div>

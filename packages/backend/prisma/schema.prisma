@@ -161,10 +161,23 @@ model Post {
   createdAt        DateTime   @default(now())
   updatedAt        DateTime   @updatedAt
 
-  tags PostTag[]
+  tags   PostTag[]
+  images PostImage[]
 
   @@index([status, publishedAt])
   @@index([authorId])
+}
+
+model PostImage {
+  id      String @id @default(uuid())
+  postId  String
+  mediaId String
+  order   Int    @default(0)
+  post    Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
+  media   Media  @relation(fields: [mediaId], references: [id])
+
+  @@unique([postId, mediaId])
+  @@index([postId])
 }
 
 model PostTag {
@@ -208,6 +221,7 @@ model Media {
   createdAt     DateTime          @default(now())
 
   postsAsFeatured Post[]
+  postImages      PostImage[]
 
   @@index([uploadedById])
   @@index([folder])
