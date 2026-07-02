@@ -14,14 +14,22 @@ const GAP = 24;
 const TRANSITION_MS = 1500;
 const AUTO_INTERVAL_MS = 3500;
 
+const MAX_VISIBLE = 3;
+
 export function TestimonialMarquee({ testimonials, locale }: Props) {
   const n = testimonials.length;
-  // triple items for seamless infinite loop
-  const items = [...testimonials, ...testimonials, ...testimonials];
+  // Only loop (and triple for a seamless infinite effect) when there are more
+  // items than can be shown at once — otherwise tripling just repeats the
+  // same card(s) side by side.
+  const shouldLoop = n > MAX_VISIBLE;
+  const items = shouldLoop
+    ? [...testimonials, ...testimonials, ...testimonials]
+    : testimonials;
 
-  const [index, setIndex] = useState(n); // start at middle copy
+  const [index, setIndex] = useState(shouldLoop ? n : 0); // start at middle copy
   const [animated, setAnimated] = useState(true);
   const [cardW, setCardW] = useState(0);
+  const [failedAvatars, setFailedAvatars] = useState<Record<string, boolean>>({});
 
   const containerRef = useRef<HTMLDivElement>(null);
   const isResetting = useRef(false);
@@ -43,6 +51,7 @@ export function TestimonialMarquee({ testimonials, locale }: Props) {
 
   // After transition ends, silently reset to equivalent position in middle copy
   useEffect(() => {
+    if (!shouldLoop) return;
     if (isResetting.current) return;
     const outOfBounds = index >= n * 2 || index < n;
     if (!outOfBounds) return;
@@ -63,15 +72,16 @@ export function TestimonialMarquee({ testimonials, locale }: Props) {
     }, TRANSITION_MS);
 
     return () => clearTimeout(id);
-  }, [index, n]);
+  }, [index, n, shouldLoop]);
 
   // Auto advance
   useEffect(() => {
+    if (!shouldLoop) return;
     const id = setInterval(() => {
       if (!isResetting.current) setIndex((i) => i + 1);
     }, AUTO_INTERVAL_MS);
     return () => clearInterval(id);
-  }, []);
+  }, [shouldLoop]);
 
   const prev = () => setIndex((i) => i - 1);
   const next = () => setIndex((i) => i + 1);
@@ -80,13 +90,15 @@ export function TestimonialMarquee({ testimonials, locale }: Props) {
 
   return (
     <div className="relative px-14">
-      <button
-        onClick={prev}
-        className="absolute left-0 top-1/2 z-10 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full border border-border bg-card shadow-md transition-colors hover:bg-secondary"
-        aria-label="Previous"
-      >
-        <ChevronLeft size={20} />
-      </button>
+      {shouldLoop && (
+        <button
+          onClick={prev}
+          className="absolute left-0 top-1/2 z-10 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full border border-border bg-card shadow-md transition-colors hover:bg-secondary"
+          aria-label="Previous"
+        >
+          <ChevronLeft size={20} />
+        </button>
+      )}
 
       <div
         ref={containerRef}
@@ -94,25 +106,26 @@ export function TestimonialMarquee({ testimonials, locale }: Props) {
         style={{ opacity: cardW ? 1 : 0 }}
       >
         <div
-          className="flex pb-1"
+          className={`flex pb-1 ${shouldLoop ? "" : "justify-center"}`}
           style={{
             gap: `${GAP}px`,
-            transform: translateX !== undefined ? `translateX(${translateX}px)` : undefined,
-            transition: animated ? `transform ${TRANSITION_MS}ms cubic-bezier(0.4,0,0.2,1)` : "none",
+            transform: shouldLoop && translateX !== undefined ? `translateX(${translateX}px)` : undefined,
+            transition: shouldLoop && animated ? `transform ${TRANSITION_MS}ms cubic-bezier(0.4,0,0.2,1)` : "none",
           }}
         >
           {items.map((t, i) => {
             const content = locale === "vi" ? t.contentVi : t.contentEn;
+            const avatarKey = `${t.id}-${i}`;
             return (
               <div
-                key={`${t.id}-${i}`}
+                key={avatarKey}
                 style={{ width: cardW || 320, flexShrink: 0 }}
                 className="flex flex-col rounded-xl border border-border bg-card p-6 shadow-sm"
               >
                 <Quote size={28} className="mb-4 shrink-0 text-primary/30" />
                 <p className="flex-1 text-sm leading-7 text-muted-foreground">{content}</p>
                 <div className="mt-6 flex items-center gap-3">
-                  {t.avatar ? (
+                  {t.avatar && !failedAvatars[avatarKey] ? (
                     <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full bg-muted">
                       <Image
                         src={t.avatar}
@@ -120,6 +133,9 @@ export function TestimonialMarquee({ testimonials, locale }: Props) {
                         fill
                         sizes="40px"
                         className="object-cover"
+                        onError={() =>
+                          setFailedAvatars((prev) => ({ ...prev, [avatarKey]: true }))
+                        }
                       />
                     </div>
                   ) : (
@@ -140,13 +156,15 @@ export function TestimonialMarquee({ testimonials, locale }: Props) {
         </div>
       </div>
 
-      <button
-        onClick={next}
-        className="absolute right-0 top-1/2 z-10 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full border border-border bg-card shadow-md transition-colors hover:bg-secondary"
-        aria-label="Next"
-      >
-        <ChevronRight size={20} />
-      </button>
+      {shouldLoop && (
+        <button
+          onClick={next}
+          className="absolute right-0 top-1/2 z-10 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full border border-border bg-card shadow-md transition-colors hover:bg-secondary"
+          aria-label="Next"
+        >
+          <ChevronRight size={20} />
+        </button>
+      )}
     </div>
   );
 }
