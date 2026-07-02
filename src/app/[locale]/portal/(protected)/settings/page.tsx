@@ -3,10 +3,12 @@
 import { useEffect, useState } from "react";
 import { Mail, Plus, Trash2, Save } from "lucide-react";
 import { getLeadRecipients, setLeadRecipients } from "@/lib/api/settings.api";
+import { useAuth } from "@/lib/auth/useAuth";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export default function SettingsPage() {
+  const { user } = useAuth();
   const [emails, setEmails] = useState<string[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(true);
@@ -53,6 +55,14 @@ export default function SettingsPage() {
     } finally {
       setSaving(false);
     }
+  }
+
+  if (user && user.role !== "admin") {
+    return (
+      <div className="rounded-lg bg-muted px-4 py-3 text-sm text-muted-foreground">
+        Bạn không có quyền truy cập trang này.
+      </div>
+    );
   }
 
   if (loading) {

@@ -5,6 +5,7 @@ import Image from "next/image";
 import { Copy, Trash2, X, ImageOff } from "lucide-react";
 import { UploadDropzone } from "@/components/portal/media/UploadDropzone";
 import { listMedia, deleteMedia, type MediaItem } from "@/lib/api/media.api";
+import { PermissionGate } from "@/components/portal/PermissionGate";
 
 export default function MediaPage() {
   const [items, setItems] = useState<MediaItem[]>([]);
@@ -48,6 +49,14 @@ export default function MediaPage() {
   }
 
   return (
+    <PermissionGate
+      needAny={["media.view", "media.upload", "media.delete.own", "media.delete.any"]}
+      fallback={
+        <div className="rounded-lg bg-muted px-4 py-3 text-sm text-muted-foreground">
+          Bạn không có quyền truy cập trang này.
+        </div>
+      }
+    >
     <div className="space-y-6">
       <h1 className="text-2xl font-bold text-foreground">Thư viện ảnh</h1>
 
@@ -58,7 +67,9 @@ export default function MediaPage() {
         </div>
       )}
 
-      <UploadDropzone onUploaded={handleUploaded} />
+      <PermissionGate need="media.upload">
+        <UploadDropzone onUploaded={handleUploaded} />
+      </PermissionGate>
 
       {loading ? (
         <div className="flex h-40 items-center justify-center">
@@ -131,17 +142,20 @@ export default function MediaPage() {
               <Copy size={14} />
               {copied ? "Đã sao chép!" : "Sao chép URL"}
             </button>
-            <button
-              onClick={() => handleDelete(selected)}
-              disabled={deleting}
-              className="flex w-full items-center justify-center gap-2 rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive hover:bg-destructive/20 disabled:opacity-60 transition-colors"
-            >
-              <Trash2 size={14} />
-              {deleting ? "Đang xóa..." : "Xóa ảnh"}
-            </button>
+            <PermissionGate needAny={["media.delete.own", "media.delete.any"]}>
+              <button
+                onClick={() => handleDelete(selected)}
+                disabled={deleting}
+                className="flex w-full items-center justify-center gap-2 rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive hover:bg-destructive/20 disabled:opacity-60 transition-colors"
+              >
+                <Trash2 size={14} />
+                {deleting ? "Đang xóa..." : "Xóa ảnh"}
+              </button>
+            </PermissionGate>
           </div>
         </div>
       )}
     </div>
+    </PermissionGate>
   );
 }

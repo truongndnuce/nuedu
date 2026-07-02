@@ -34,7 +34,7 @@ export class MediaController {
   }
 
   @Get()
-  @Permissions('media.upload')
+  @Permissions('media.view')
   @ApiOperation({ summary: 'List own uploads (F-024)' })
   list(@Query() dto: ListMediaDto, @CurrentUser('id') userId: string) {
     return this.service.list(dto, userId);
@@ -54,7 +54,7 @@ export class MediaController {
   }
 
   @Get(':id/url')
-  @Permissions('media.upload')
+  @Permissions('media.view')
   @ApiOperation({ summary: 'Get private download URL (F-025)' })
   getPrivateUrl(@Param('id') id: string, @CurrentUser('id') userId: string) {
     return this.service.getPrivateUrl(id, userId);

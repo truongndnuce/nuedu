@@ -18,6 +18,14 @@ export class TagsController {
     return this.service.findAll(search);
   }
 
+  @Get('admin')
+  @ApiBearerAuth()
+  @Permissions('tags.view', 'tags.manage')
+  @ApiOperation({ summary: 'List all tags (admin)' })
+  findAllAdmin(@Query('search') search?: string) {
+    return this.service.findAll(search);
+  }
+
   @Post()
   @ApiBearerAuth()
   @Permissions('tags.manage')

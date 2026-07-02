@@ -125,6 +125,14 @@ export default function TrainersPortalPage() {
   }
 
   return (
+    <PermissionGate
+      needAny={["trainers.view", "trainers.manage"]}
+      fallback={
+        <div className="rounded-lg bg-muted px-4 py-3 text-sm text-muted-foreground">
+          Bạn không có quyền truy cập trang này.
+        </div>
+      }
+    >
     <div className="space-y-6">
       {error && (
         <div className="rounded-lg bg-destructive/10 px-4 py-3 text-sm text-destructive">
@@ -406,5 +414,6 @@ export default function TrainersPortalPage() {
         </div>
       )}
     </div>
+    </PermissionGate>
   );
 }

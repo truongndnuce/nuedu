@@ -20,7 +20,7 @@ export class TrainersController {
 
   @Get('admin')
   @ApiBearerAuth()
-  @Permissions('trainers.manage')
+  @Permissions('trainers.view', 'trainers.manage')
   @ApiOperation({ summary: 'List all trainers including inactive (admin)' })
   findAllAdmin() {
     return this.service.findAllAdmin();

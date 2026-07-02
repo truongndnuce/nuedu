@@ -15,7 +15,7 @@ export class PostsController {
   constructor(private readonly service: PostsService) {}
 
   @Get()
-  @Permissions('posts.update.own')
+  @Permissions('posts.view', 'posts.update.own', 'posts.update.any')
   @ApiOperation({ summary: 'List posts (staff view, F-030)' })
   findAll(
     @Query() dto: ListPostsDto,
@@ -33,7 +33,7 @@ export class PostsController {
   }
 
   @Get(':id')
-  @Permissions('posts.update.own')
+  @Permissions('posts.view', 'posts.update.own', 'posts.update.any')
   @ApiOperation({ summary: 'Get post detail (F-030)' })
   findOne(
     @Param('id') id: string,

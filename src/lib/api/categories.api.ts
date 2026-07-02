@@ -11,6 +11,10 @@ export function listCategories(): Promise<Category[]> {
   return apiFetch("/categories");
 }
 
+export function listCategoriesAdmin(): Promise<Category[]> {
+  return apiFetch("/categories/admin");
+}
+
 export function createCategory(dto: {
   nameVi: string;
   nameEn: string;

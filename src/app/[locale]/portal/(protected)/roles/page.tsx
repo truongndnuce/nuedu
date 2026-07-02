@@ -5,10 +5,12 @@ import { useRouter } from "next/navigation";
 import { useLocale } from "next-intl";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import { listRoles, deleteRole, type ApiCustomRole } from "@/lib/api/roles.api";
+import { useAuth } from "@/lib/auth/useAuth";
 
 export default function RolesPage() {
   const router = useRouter();
   const locale = useLocale();
+  const { user } = useAuth();
   const [roles, setRoles] = useState<ApiCustomRole[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -32,6 +34,14 @@ export default function RolesPage() {
     } finally {
       setDeleting(null);
     }
+  }
+
+  if (user && user.role !== "admin") {
+    return (
+      <div className="rounded-lg bg-muted px-4 py-3 text-sm text-muted-foreground">
+        Bạn không có quyền truy cập trang này.
+      </div>
+    );
   }
 
   if (loading) {

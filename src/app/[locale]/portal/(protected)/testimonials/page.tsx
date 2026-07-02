@@ -102,6 +102,14 @@ export default function TestimonialsPortalPage() {
   }
 
   return (
+    <PermissionGate
+      needAny={["testimonials.view", "testimonials.manage"]}
+      fallback={
+        <div className="rounded-lg bg-muted px-4 py-3 text-sm text-muted-foreground">
+          Bạn không có quyền truy cập trang này.
+        </div>
+      }
+    >
     <div className="p-6">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-foreground">Feedback học viên</h1>
@@ -315,5 +323,6 @@ export default function TestimonialsPortalPage() {
         </div>
       )}
     </div>
+    </PermissionGate>
   );
 }

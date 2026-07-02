@@ -3,12 +3,13 @@
 import { useEffect, useState } from "react";
 import { Pencil, Trash2, Plus, Check, X } from "lucide-react";
 import {
-  listTags,
+  listTagsAdmin,
   createTag,
   updateTag,
   deleteTag,
   type Tag,
 } from "@/lib/api/tags.api";
+import { PermissionGate } from "@/components/portal/PermissionGate";
 
 export default function TagsPage() {
   const [tags, setTags] = useState<Tag[]>([]);
@@ -23,7 +24,7 @@ export default function TagsPage() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    listTags()
+    listTagsAdmin()
       .then(setTags)
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
@@ -86,6 +87,14 @@ export default function TagsPage() {
   }
 
   return (
+    <PermissionGate
+      needAny={["tags.view", "tags.manage"]}
+      fallback={
+        <div className="rounded-lg bg-muted px-4 py-3 text-sm text-muted-foreground">
+          Bạn không có quyền truy cập trang này.
+        </div>
+      }
+    >
     <div className="space-y-6">
       {error && (
         <div className="rounded-lg bg-destructive/10 px-4 py-3 text-sm text-destructive">
@@ -98,13 +107,15 @@ export default function TagsPage() {
 
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-foreground">Thẻ</h1>
-        <button
-          onClick={() => setAddingNew(true)}
-          className="flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
-        >
-          <Plus size={15} />
-          Thêm thẻ
-        </button>
+        <PermissionGate need="tags.manage">
+          <button
+            onClick={() => setAddingNew(true)}
+            className="flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
+          >
+            <Plus size={15} />
+            Thêm thẻ
+          </button>
+        </PermissionGate>
       </div>
 
       <div className="rounded-xl border border-border overflow-hidden">
@@ -210,7 +221,7 @@ export default function TagsPage() {
                         </button>
                       </>
                     ) : (
-                      <>
+                      <PermissionGate need="tags.manage">
                         <button
                           onClick={() => startEdit(tag)}
                           className="rounded p-1 text-muted-foreground hover:text-primary hover:bg-muted"
@@ -223,7 +234,7 @@ export default function TagsPage() {
                         >
                           <Trash2 size={14} />
                         </button>
-                      </>
+                      </PermissionGate>
                     )}
                   </div>
                 </td>
@@ -243,5 +254,6 @@ export default function TagsPage() {
         </table>
       </div>
     </div>
+    </PermissionGate>
   );
 }

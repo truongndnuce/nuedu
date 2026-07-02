@@ -18,11 +18,13 @@ import {
   MessageCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/lib/auth/useAuth";
 import { PermissionGate } from "./PermissionGate";
 
 export function Sidebar() {
   const locale = useLocale();
   const pathname = usePathname();
+  const { user } = useAuth();
 
   const nav: {
     href: string;
@@ -41,6 +43,7 @@ export function Sidebar() {
       icon: FileText,
       label: "Bài viết",
       needAny: [
+        "posts.view",
         "posts.create",
         "posts.update.own",
         "posts.update.any",
@@ -54,13 +57,13 @@ export function Sidebar() {
       href: `/${locale}/portal/categories`,
       icon: FolderOpen,
       label: "Danh mục",
-      need: "categories.manage",
+      needAny: ["categories.view", "categories.manage"],
     },
     {
       href: `/${locale}/portal/tags`,
       icon: Tag,
       label: "Thẻ",
-      need: "tags.manage",
+      needAny: ["tags.view", "tags.manage"],
     },
     {
       href: `/${locale}/portal/chat`,
@@ -72,7 +75,7 @@ export function Sidebar() {
       href: `/${locale}/portal/media`,
       icon: Image,
       label: "Thư viện ảnh",
-      needAny: ["media.upload", "media.delete.own", "media.delete.any"],
+      needAny: ["media.view", "media.upload", "media.delete.own", "media.delete.any"],
     },
   ];
 
@@ -120,7 +123,7 @@ export function Sidebar() {
         })}
 
         {/* Permission-gated: Testimonials */}
-        <PermissionGate need="testimonials.manage">
+        <PermissionGate needAny={["testimonials.view", "testimonials.manage"]}>
           <Link
             href={`/${locale}/portal/testimonials`}
             className={cn(
@@ -136,7 +139,7 @@ export function Sidebar() {
         </PermissionGate>
 
         {/* Permission-gated: Trainers */}
-        <PermissionGate need="trainers.manage">
+        <PermissionGate needAny={["trainers.view", "trainers.manage"]}>
           <Link
             href={`/${locale}/portal/trainers`}
             className={cn(
@@ -152,7 +155,7 @@ export function Sidebar() {
         </PermissionGate>
 
         {/* Admin-only: Users */}
-        <PermissionGate need="users.read">
+        {user?.role === "admin" && (
           <Link
             href={`/${locale}/portal/users`}
             className={cn(
@@ -165,10 +168,10 @@ export function Sidebar() {
             <Users size={16} />
             Người dùng
           </Link>
-        </PermissionGate>
+        )}
 
         {/* Admin-only: Roles */}
-        <PermissionGate need="roles.manage">
+        {user?.role === "admin" && (
           <Link
             href={`/${locale}/portal/roles`}
             className={cn(
@@ -181,10 +184,10 @@ export function Sidebar() {
             <ShieldCheck size={16} />
             Vai trò
           </Link>
-        </PermissionGate>
+        )}
 
         {/* Admin-only: System Settings */}
-        <PermissionGate need="settings.manage">
+        {user?.role === "admin" && (
           <Link
             href={`/${locale}/portal/settings`}
             className={cn(
@@ -197,7 +200,7 @@ export function Sidebar() {
             <Settings size={16} />
             Cài đặt hệ thống
           </Link>
-        </PermissionGate>
+        )}
 
         {/* Always visible: Account settings */}
         <div className="mt-2 border-t border-sidebar-border pt-2">

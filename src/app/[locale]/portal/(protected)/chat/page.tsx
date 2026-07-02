@@ -10,6 +10,7 @@ import {
   type ConvListItem,
   type ConvStatus,
 } from "@/lib/api/chat.api";
+import { PermissionGate } from "@/components/portal/PermissionGate";
 
 type FilterType = "all" | ConvStatus;
 
@@ -94,6 +95,14 @@ export default function ChatInboxPage() {
   }
 
   return (
+    <PermissionGate
+      needAny={["chat.read.all", "chat.read.assigned"]}
+      fallback={
+        <div className="rounded-lg bg-muted px-4 py-3 text-sm text-muted-foreground">
+          Bạn không có quyền truy cập trang này.
+        </div>
+      }
+    >
     <div className="space-y-6">
       {error && (
         <div className="rounded-lg bg-destructive/10 px-4 py-3 text-sm text-destructive">
@@ -169,5 +178,6 @@ export default function ChatInboxPage() {
         )}
       </div>
     </div>
+    </PermissionGate>
   );
 }

@@ -20,7 +20,7 @@ export class TestimonialsController {
 
   @Get('admin')
   @ApiBearerAuth()
-  @Permissions('testimonials.manage')
+  @Permissions('testimonials.view', 'testimonials.manage')
   @ApiOperation({ summary: 'List all testimonials including inactive (admin)' })
   findAllAdmin() {
     return this.service.findAllAdmin();

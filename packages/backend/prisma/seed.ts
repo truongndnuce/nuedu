@@ -5,6 +5,7 @@ const prisma = new PrismaClient();
 
 const PERMISSIONS = [
   // posts
+  { key: 'posts.view', group: 'posts', description: 'View posts list/detail' },
   { key: 'posts.create', group: 'posts', description: 'Create new post' },
   { key: 'posts.update.own', group: 'posts', description: 'Edit own posts' },
   { key: 'posts.update.any', group: 'posts', description: 'Edit any post' },
@@ -13,9 +14,12 @@ const PERMISSIONS = [
   { key: 'posts.publish', group: 'posts', description: 'Publish / unpublish' },
   { key: 'posts.schedule', group: 'posts', description: 'Schedule future publish' },
   // taxonomy
+  { key: 'categories.view', group: 'taxonomy', description: 'View categories (admin)' },
   { key: 'categories.manage', group: 'taxonomy', description: 'CRUD categories' },
+  { key: 'tags.view', group: 'taxonomy', description: 'View tags (admin)' },
   { key: 'tags.manage', group: 'taxonomy', description: 'CRUD tags' },
   // media
+  { key: 'media.view', group: 'media', description: 'View media library' },
   { key: 'media.upload', group: 'media', description: 'Upload files' },
   { key: 'media.delete.own', group: 'media', description: 'Delete own uploads' },
   { key: 'media.delete.any', group: 'media', description: 'Delete any upload' },
@@ -25,30 +29,37 @@ const PERMISSIONS = [
   { key: 'chat.reply', group: 'chat', description: 'Send messages' },
   { key: 'chat.assign', group: 'chat', description: 'Assign/reassign conversations' },
   { key: 'chat.close', group: 'chat', description: 'Close conversations' },
-  // users
-  { key: 'users.create', group: 'users', description: 'Create staff accounts' },
-  { key: 'users.read', group: 'users', description: 'List staff' },
-  { key: 'users.update', group: 'users', description: 'Edit staff info' },
-  { key: 'users.delete', group: 'users', description: 'Deactivate staff' },
-  { key: 'permissions.assign', group: 'users', description: 'Grant/revoke per-user permissions' },
   // trainers
+  { key: 'trainers.view', group: 'trainers', description: 'View trainers (admin)' },
   { key: 'trainers.manage', group: 'trainers', description: 'CRUD trainers' },
   // testimonials
+  { key: 'testimonials.view', group: 'testimonials', description: 'View testimonials (admin)' },
   { key: 'testimonials.manage', group: 'testimonials', description: 'CRUD testimonials' },
-  // roles
-  { key: 'roles.manage', group: 'roles', description: 'Quản lý vai trò tùy chỉnh' },
   // audit
   { key: 'audit.read', group: 'audit', description: 'Read audit logs (admin only)' },
-  // settings
-  { key: 'settings.manage', group: 'settings', description: 'Manage system settings (lead recipients, etc.)' },
+];
+
+// roles.manage / users.* / permissions.assign / settings.manage were removed —
+// those pages are now hard-gated to UserRole.ADMIN via @AdminOnly(), not
+// assignable per-role/per-user permissions.
+const DEPRECATED_PERMISSION_KEYS = [
+  'roles.manage',
+  'users.create',
+  'users.read',
+  'users.update',
+  'users.delete',
+  'permissions.assign',
+  'settings.manage',
 ];
 
 const STAFF_DEFAULT_PERMISSIONS = [
+  'posts.view',
   'posts.create',
   'posts.update.own',
   'posts.delete.own',
   'posts.publish',
   'posts.schedule',
+  'media.view',
   'media.upload',
   'media.delete.own',
   'chat.read.assigned',
@@ -58,6 +69,23 @@ const STAFF_DEFAULT_PERMISSIONS = [
 
 async function main() {
   console.log('Seeding database...');
+
+  // Remove deprecated permissions (and any Role/CustomRole/User assignments
+  // referencing them) — these pages are now hard-gated to ADMIN only.
+  // RolePermission/UserPermission have no onDelete: Cascade on `permission`,
+  // so their rows must be removed before the Permission rows themselves
+  // (CustomRolePermission does cascade automatically).
+  const deprecatedPerms = await prisma.permission.findMany({
+    where: { key: { in: DEPRECATED_PERMISSION_KEYS } },
+    select: { id: true },
+  });
+  const deprecatedPermIds = deprecatedPerms.map((p) => p.id);
+  if (deprecatedPermIds.length > 0) {
+    await prisma.rolePermission.deleteMany({ where: { permissionId: { in: deprecatedPermIds } } });
+    await prisma.userPermission.deleteMany({ where: { permissionId: { in: deprecatedPermIds } } });
+    await prisma.permission.deleteMany({ where: { id: { in: deprecatedPermIds } } });
+  }
+  console.log(`✓ ${deprecatedPermIds.length} deprecated permissions removed`);
 
   // Upsert all permissions
   for (const perm of PERMISSIONS) {

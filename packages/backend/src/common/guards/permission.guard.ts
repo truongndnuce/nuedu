@@ -1,6 +1,7 @@
 import { CanActivate, ExecutionContext, ForbiddenException, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { UserRole } from '@prisma/client';
+import { ADMIN_ONLY_KEY } from '../decorators/admin-only.decorator';
 import { PERMISSIONS_KEY } from '../decorators/permissions.decorator';
 
 interface AuthUser {
@@ -14,6 +15,19 @@ export class PermissionGuard implements CanActivate {
   constructor(private reflector: Reflector) {}
 
   canActivate(context: ExecutionContext): boolean {
+    const isAdminOnly = this.reflector.getAllAndOverride<boolean>(ADMIN_ONLY_KEY, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
+
+    if (isAdminOnly) {
+      const user = context.switchToHttp().getRequest<{ user: AuthUser }>().user;
+      if (!user || user.role !== UserRole.ADMIN) {
+        throw new ForbiddenException('Admin access required');
+      }
+      return true;
+    }
+
     const required = this.reflector.getAllAndOverride<string[]>(PERMISSIONS_KEY, [
       context.getHandler(),
       context.getClass(),

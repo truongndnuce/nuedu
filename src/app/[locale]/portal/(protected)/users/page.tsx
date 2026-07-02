@@ -10,9 +10,11 @@ import {
   roleLabel,
   type ApiUser,
 } from "@/lib/api/users.api";
+import { useAuth } from "@/lib/auth/useAuth";
 
 export default function UsersPage() {
   const locale = useLocale();
+  const { user: currentUser } = useAuth();
   const [users, setUsers] = useState<ApiUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -34,6 +36,14 @@ export default function UsersPage() {
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Lỗi khi vô hiệu hóa");
     }
+  }
+
+  if (currentUser && currentUser.role !== "admin") {
+    return (
+      <div className="rounded-lg bg-muted px-4 py-3 text-sm text-muted-foreground">
+        Bạn không có quyền truy cập trang này.
+      </div>
+    );
   }
 
   if (loading) {

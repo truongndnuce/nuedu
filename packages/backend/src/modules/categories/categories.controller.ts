@@ -18,6 +18,14 @@ export class CategoriesController {
     return this.service.findAll();
   }
 
+  @Get('admin')
+  @ApiBearerAuth()
+  @Permissions('categories.view', 'categories.manage')
+  @ApiOperation({ summary: 'List all categories (admin)' })
+  findAllAdmin() {
+    return this.service.findAll();
+  }
+
   @Post()
   @ApiBearerAuth()
   @Permissions('categories.manage')

@@ -12,6 +12,11 @@ export function listTags(search?: string): Promise<Tag[]> {
   return apiFetch(`/tags${q}`);
 }
 
+export function listTagsAdmin(search?: string): Promise<Tag[]> {
+  const q = search ? `?search=${encodeURIComponent(search)}` : "";
+  return apiFetch(`/tags/admin${q}`);
+}
+
 export function createTag(dto: {
   nameVi: string;
   nameEn: string;
