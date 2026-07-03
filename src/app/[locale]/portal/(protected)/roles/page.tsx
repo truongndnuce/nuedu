@@ -5,7 +5,10 @@ import { useRouter } from "next/navigation";
 import { useLocale } from "next-intl";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import { listRoles, deleteRole, type ApiCustomRole } from "@/lib/api/roles.api";
+import { roleLabel } from "@/lib/api/users.api";
 import { useAuth } from "@/lib/auth/useAuth";
+
+const SYSTEM_ROLES = ["ADMIN", "STAFF"] as const;
 
 export default function RolesPage() {
   const router = useRouter();
@@ -76,6 +79,37 @@ export default function RolesPage() {
           Tạo vai trò mới
         </button>
       </div>
+
+      <div>
+        <h2 className="text-sm font-semibold text-foreground mb-2">Vai trò hệ thống</h2>
+        <div className="rounded-xl border border-border overflow-hidden">
+          <table className="w-full text-sm">
+            <tbody className="divide-y divide-border">
+              {SYSTEM_ROLES.map((role) => (
+                <tr key={role} className="hover:bg-muted/20 transition-colors">
+                  <td className="px-4 py-3 font-medium text-foreground">{roleLabel(role)}</td>
+                  <td className="px-4 py-3 text-muted-foreground">
+                    Vai trò cố định của hệ thống, không thể xóa hoặc đổi tên
+                  </td>
+                  <td className="px-4 py-3 w-10">
+                    <div className="flex items-center justify-end">
+                      <button
+                        onClick={() => router.push(`/${locale}/portal/roles/system/${role}`)}
+                        className="rounded p-1.5 hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+                        title="Sửa quyền"
+                      >
+                        <Pencil size={15} />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <h2 className="text-sm font-semibold text-foreground">Vai trò tùy chỉnh</h2>
 
       {roles.length === 0 ? (
         <div className="rounded-xl border border-border bg-card p-12 text-center">

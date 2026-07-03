@@ -121,6 +121,13 @@ export function getRoleDefaults(): Promise<Record<UserRole, string[]>> {
   return apiFetch("/permissions/role-defaults");
 }
 
+export function updateRoleDefaults(role: UserRole, permissionKeys: string[]): Promise<string[]> {
+  return apiFetch(`/permissions/role-defaults/${role}`, {
+    method: "PUT",
+    body: JSON.stringify({ permissionKeys }),
+  });
+}
+
 export function roleLabel(role: UserRole): string {
   return role === "ADMIN" ? "Admin" : "Nhân viên";
 }

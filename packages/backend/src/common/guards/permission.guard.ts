@@ -40,8 +40,8 @@ export class PermissionGuard implements CanActivate {
 
     if (!user) return false;
 
-    // ADMIN bypasses all permission checks
-    if (user.role === UserRole.ADMIN) return true;
+    // ADMIN is a regular role now: its permissions come from RolePermission
+    // just like any other role (seeded with every permission by default).
 
     // OR logic: user must have at least one of the required permissions
     const hasPermission = required.some((key) => user.effectivePermissions.includes(key));

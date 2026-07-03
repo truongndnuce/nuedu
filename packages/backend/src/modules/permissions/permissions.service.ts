@@ -1,8 +1,9 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { UserRole } from '@prisma/client';
 import { PrismaService } from '../../config/prisma.service';
 import { CreatePermissionDto } from './dto/create-permission.dto';
 import { UpdatePermissionDto } from './dto/update-permission.dto';
+import { UpdateRoleDefaultsDto } from './dto/update-role-defaults.dto';
 
 const SELECT = { id: true, key: true, group: true, description: true };
 
@@ -21,9 +22,17 @@ export class PermissionsService {
     const existing = await this.prisma.permission.findUnique({ where: { key: dto.key } });
     if (existing) throw new ConflictException('Permission key already exists');
 
-    return this.prisma.permission.create({
-      data: { key: dto.key, group: dto.group, description: dto.description },
-      select: SELECT,
+    // Newly created permissions are granted to ADMIN by default, since ADMIN
+    // is meant to always have every permission unless explicitly narrowed.
+    return this.prisma.$transaction(async (tx) => {
+      const perm = await tx.permission.create({
+        data: { key: dto.key, group: dto.group, description: dto.description },
+        select: SELECT,
+      });
+      await tx.rolePermission.create({
+        data: { role: UserRole.ADMIN, permissionId: perm.id },
+      });
+      return perm;
     });
   }
 
@@ -67,5 +76,37 @@ export class PermissionsService {
     );
 
     return result;
+  }
+
+  async updateRoleDefaults(role: string, dto: UpdateRoleDefaultsDto) {
+    if (!Object.values(UserRole).includes(role as UserRole)) {
+      throw new BadRequestException(`Unknown role: ${role}`);
+    }
+    const targetRole = role as UserRole;
+
+    const perms = await this.prisma.permission.findMany({
+      where: { key: { in: dto.permissionKeys } },
+    });
+
+    if (perms.length !== dto.permissionKeys.length) {
+      const found = new Set(perms.map((p) => p.key));
+      const missing = dto.permissionKeys.filter((k) => !found.has(k));
+      throw new BadRequestException(`Unknown permission keys: ${missing.join(', ')}`);
+    }
+
+    await this.prisma.$transaction([
+      this.prisma.rolePermission.deleteMany({ where: { role: targetRole } }),
+      ...perms.map((perm) =>
+        this.prisma.rolePermission.create({
+          data: { role: targetRole, permissionId: perm.id },
+        }),
+      ),
+    ]);
+
+    const updated = await this.prisma.rolePermission.findMany({
+      where: { role: targetRole },
+      include: { permission: { select: { key: true } } },
+    });
+    return updated.map((rp) => rp.permission.key);
   }
 }

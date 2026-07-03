@@ -1,8 +1,9 @@
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post, Put } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { AdminOnly } from '../../common/decorators';
 import { CreatePermissionDto } from './dto/create-permission.dto';
 import { UpdatePermissionDto } from './dto/update-permission.dto';
+import { UpdateRoleDefaultsDto } from './dto/update-role-defaults.dto';
 import { PermissionsService } from './permissions.service';
 
 @ApiTags('Permissions')
@@ -21,6 +22,13 @@ export class PermissionsController {
   @ApiOperation({ summary: 'Default permissions per role' })
   roleDefaults() {
     return this.permissionsService.getRoleDefaults();
+  }
+
+  @Put('role-defaults/:role')
+  @AdminOnly()
+  @ApiOperation({ summary: 'Set default permissions for a system role (ADMIN/STAFF) (admin only)' })
+  updateRoleDefaults(@Param('role') role: string, @Body() dto: UpdateRoleDefaultsDto) {
+    return this.permissionsService.updateRoleDefaults(role, dto);
   }
 
   @Post()
