@@ -62,6 +62,7 @@ const STAFF_DEFAULT_PERMISSIONS = [
   'media.view',
   'media.upload',
   'media.delete.own',
+  'chat.read.all',
   'chat.read.assigned',
   'chat.reply',
   'chat.close',
