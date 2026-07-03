@@ -176,9 +176,12 @@ export function getConversationTyping(conversationId: string): Promise<{ guestTy
 }
 
 // ── Guest API (no JWT, uses nuedu_guest_id cookie) ──────────────────────────
-
-const GUEST_BASE =
-  process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000/api/v1";
+//
+// Routed through the frontend's own origin (see /api/proxy rewrite in
+// next.config.ts) instead of calling the backend domain directly — the guest
+// cookie must be first-party or browsers with third-party cookie blocking
+// enabled will silently drop it, causing every follow-up request to 401.
+const GUEST_BASE = "/api/proxy";
 
 async function guestFetch<T>(path: string, init: RequestInit = {}): Promise<T> {
   const res = await fetch(`${GUEST_BASE}${path}`, {

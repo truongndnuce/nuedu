@@ -3,7 +3,25 @@ import createNextIntlPlugin from "next-intl/plugin";
 
 const withNextIntl = createNextIntlPlugin("./src/lib/i18n/request.ts");
 
+// Guest chat relies on an httpOnly cookie. In production the frontend and
+// backend live on different domains, and modern browsers block third-party
+// cookies on cross-site fetches (SameSite=None no longer saves it — see
+// guest.controller.ts). Proxying through the frontend's own origin makes the
+// request same-site from the browser's perspective, so the cookie is treated
+// as first-party and actually gets sent back.
+const BACKEND_URL =
+  process.env.INTERNAL_API_URL ??
+  process.env.NEXT_PUBLIC_API_URL ??
+  "http://localhost:4000/api/v1";
+
 const nextConfig: NextConfig = {
+  async rewrites() {
+    return {
+      beforeFiles: [
+        { source: "/api/proxy/:path*", destination: `${BACKEND_URL}/:path*` },
+      ],
+    };
+  },
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "cdn.nuedu.vn" },
