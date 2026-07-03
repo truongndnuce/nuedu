@@ -7,15 +7,7 @@ import { ArrowLeft } from "lucide-react";
 import { createRole } from "@/lib/api/roles.api";
 import { listAllPermissions, type PermissionDef } from "@/lib/api/users.api";
 import { updateRolePermissions } from "@/lib/api/roles.api";
-
-function groupByGroup(perms: PermissionDef[]): Record<string, PermissionDef[]> {
-  const groups: Record<string, PermissionDef[]> = {};
-  for (const p of perms) {
-    groups[p.group] = groups[p.group] ?? [];
-    groups[p.group].push(p);
-  }
-  return groups;
-}
+import { PermissionPicker } from "@/components/portal/permissions/PermissionPicker";
 
 export default function NewRolePage() {
   const router = useRouter();
@@ -30,25 +22,6 @@ export default function NewRolePage() {
   useEffect(() => {
     listAllPermissions().then(setAllPerms).catch(() => {});
   }, []);
-
-  function togglePerm(key: string) {
-    setSelectedPerms((prev) => {
-      const next = new Set(prev);
-      if (next.has(key)) next.delete(key);
-      else next.add(key);
-      return next;
-    });
-  }
-
-  function toggleGroup(keys: string[]) {
-    setSelectedPerms((prev) => {
-      const next = new Set(prev);
-      const allSelected = keys.every((k) => next.has(k));
-      if (allSelected) keys.forEach((k) => next.delete(k));
-      else keys.forEach((k) => next.add(k));
-      return next;
-    });
-  }
 
   async function handleSave() {
     if (!name.trim()) { setError("Tên vai trò bắt buộc"); return; }
@@ -66,8 +39,6 @@ export default function NewRolePage() {
       setSaving(false);
     }
   }
-
-  const groups = groupByGroup(allPerms);
 
   return (
     <div className="space-y-6 max-w-2xl">
@@ -108,49 +79,12 @@ export default function NewRolePage() {
         </div>
       </div>
 
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-foreground">Phân quyền</h2>
-          <span className="text-xs text-muted-foreground">{selectedPerms.size} / {allPerms.length} quyền được chọn</span>
-        </div>
-
-        {Object.entries(groups).map(([group, perms]) => {
-          const keys = perms.map((p) => p.key);
-          const allSelected = keys.every((k) => selectedPerms.has(k));
-          const someSelected = keys.some((k) => selectedPerms.has(k));
-
-          return (
-            <div key={group} className="rounded-xl border border-border overflow-hidden">
-              <label className="flex items-center justify-between bg-muted/50 px-4 py-2.5 cursor-pointer border-b border-border hover:bg-muted/80 transition-colors">
-                <span className="text-sm font-semibold text-foreground capitalize">{group}</span>
-                <input
-                  type="checkbox"
-                  checked={allSelected}
-                  ref={(el) => { if (el) el.indeterminate = someSelected && !allSelected; }}
-                  onChange={() => toggleGroup(keys)}
-                  className="h-4 w-4 rounded border-input text-primary accent-primary"
-                />
-              </label>
-              <div className="divide-y divide-border">
-                {perms.map((perm) => (
-                  <label key={perm.key} className="flex items-center justify-between px-4 py-3 cursor-pointer hover:bg-muted/20 transition-colors">
-                    <div>
-                      <span className="text-sm text-foreground">{perm.description ?? perm.key}</span>
-                      <span className="ml-2 text-xs text-muted-foreground font-mono">{perm.key}</span>
-                    </div>
-                    <input
-                      type="checkbox"
-                      checked={selectedPerms.has(perm.key)}
-                      onChange={() => togglePerm(perm.key)}
-                      className="h-4 w-4 rounded border-input text-primary accent-primary"
-                    />
-                  </label>
-                ))}
-              </div>
-            </div>
-          );
-        })}
-      </div>
+      <PermissionPicker
+        allPerms={allPerms}
+        setAllPerms={setAllPerms}
+        selectedPerms={selectedPerms}
+        setSelectedPerms={setSelectedPerms}
+      />
 
       <div className="flex gap-3">
         <button

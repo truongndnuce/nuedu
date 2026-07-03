@@ -1,5 +1,8 @@
-import { Controller, Get } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { AdminOnly } from '../../common/decorators';
+import { CreatePermissionDto } from './dto/create-permission.dto';
+import { UpdatePermissionDto } from './dto/update-permission.dto';
 import { PermissionsService } from './permissions.service';
 
 @ApiTags('Permissions')
@@ -18,5 +21,27 @@ export class PermissionsController {
   @ApiOperation({ summary: 'Default permissions per role' })
   roleDefaults() {
     return this.permissionsService.getRoleDefaults();
+  }
+
+  @Post()
+  @AdminOnly()
+  @ApiOperation({ summary: 'Create a new permission key (admin only)' })
+  create(@Body() dto: CreatePermissionDto) {
+    return this.permissionsService.create(dto);
+  }
+
+  @Patch(':id')
+  @AdminOnly()
+  @ApiOperation({ summary: 'Update permission group/description (admin only)' })
+  update(@Param('id') id: string, @Body() dto: UpdatePermissionDto) {
+    return this.permissionsService.update(id, dto);
+  }
+
+  @Delete(':id')
+  @AdminOnly()
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Delete a permission key (admin only)' })
+  remove(@Param('id') id: string) {
+    return this.permissionsService.remove(id);
   }
 }

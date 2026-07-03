@@ -98,6 +98,25 @@ export function listAllPermissions(): Promise<PermissionDef[]> {
   return apiFetch("/permissions");
 }
 
+export function createPermission(dto: {
+  key: string;
+  group: string;
+  description?: string;
+}): Promise<PermissionDef> {
+  return apiFetch("/permissions", { method: "POST", body: JSON.stringify(dto) });
+}
+
+export function updatePermission(
+  id: string,
+  dto: { group?: string; description?: string },
+): Promise<PermissionDef> {
+  return apiFetch(`/permissions/${id}`, { method: "PATCH", body: JSON.stringify(dto) });
+}
+
+export function deletePermission(id: string): Promise<void> {
+  return apiFetch(`/permissions/${id}`, { method: "DELETE" });
+}
+
 export function getRoleDefaults(): Promise<Record<UserRole, string[]>> {
   return apiFetch("/permissions/role-defaults");
 }
