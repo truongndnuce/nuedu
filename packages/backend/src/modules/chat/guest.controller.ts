@@ -1,4 +1,16 @@
-import { Body, Controller, Get, HttpCode, NotFoundException, Patch, Post, Put, Req, Res } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  NotFoundException,
+  Patch,
+  Post,
+  Put,
+  Req,
+  Res,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { ApiCookieAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { FastifyReply, FastifyRequest } from 'fastify';
 import { Public } from '@common/decorators/public.decorator';
@@ -8,10 +20,11 @@ import { SendGuestMessageDto } from './dto/send-message.dto';
 import { UpdateGuestSessionDto } from './dto/update-guest-session.dto';
 
 const GUEST_COOKIE = 'nuedu_guest_id';
+const IS_PROD = process.env.NODE_ENV === 'production';
 const GUEST_COOKIE_OPTS = {
   httpOnly: true,
-  secure: process.env.NODE_ENV === 'production',
-  sameSite: 'lax' as const,
+  secure: IS_PROD,
+  sameSite: (IS_PROD ? 'none' : 'lax') as 'none' | 'lax',
   path: '/',
   maxAge: 30 * 24 * 60 * 60,
 };
@@ -95,7 +108,7 @@ export class GuestController {
   private requireGuestCookie(req: FastifyRequest): string {
     const cookies = req.cookies as Record<string, string | undefined>;
     const guestId = cookies[GUEST_COOKIE];
-    if (!guestId) throw new Error('Guest session cookie missing');
+    if (!guestId) throw new UnauthorizedException('Guest session cookie missing');
     return guestId;
   }
 }

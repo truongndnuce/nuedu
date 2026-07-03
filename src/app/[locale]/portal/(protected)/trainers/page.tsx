@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Pencil, Trash2, Plus, X } from "lucide-react";
 import { PermissionGate } from "@/components/portal/PermissionGate";
+import { AvatarPicker } from "@/components/portal/media/AvatarPicker";
 import {
   adminListTrainers,
   createTrainer,
@@ -339,13 +340,11 @@ export default function TrainersPortalPage() {
               {/* Avatar */}
               <div>
                 <label className="block text-xs font-medium text-muted-foreground mb-1">
-                  URL ảnh đại diện *
+                  Ảnh đại diện *
                 </label>
-                <input
+                <AvatarPicker
                   value={form.avatar}
-                  onChange={(e) => setField("avatar", e.target.value)}
-                  placeholder="/images/trainers/..."
-                  className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+                  onChange={(url) => setField("avatar", url)}
                 />
               </div>
 

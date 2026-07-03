@@ -1,4 +1,4 @@
-import { useTranslations, useLocale } from "next-intl";
+import { getTranslations, getLocale } from "next-intl/server";
 import { TrainerCard } from "@/components/public/TrainerCard";
 import type { ApiTrainer } from "@/lib/api/trainers.api";
 
@@ -16,8 +16,8 @@ async function fetchTrainers(): Promise<ApiTrainer[]> {
 }
 
 export default async function TrainersPage() {
-  const t = useTranslations("trainers");
-  const locale = useLocale();
+  const t = await getTranslations("trainers");
+  const locale = await getLocale();
   const trainers = await fetchTrainers();
 
   return (
