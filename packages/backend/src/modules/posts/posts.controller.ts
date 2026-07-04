@@ -44,7 +44,7 @@ export class PostsController {
   }
 
   @Patch(':id')
-  @Permissions('posts.update.own')
+  @Permissions('posts.update.own', 'posts.update.any')
   @ApiOperation({ summary: 'Update post (F-030, F-032)' })
   update(
     @Param('id') id: string,

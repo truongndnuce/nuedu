@@ -20,11 +20,11 @@ import {
   type ApiPost,
 } from "@/lib/api/posts.api";
 import { ApiError } from "@/lib/api/client";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, CheckCircle2 } from "lucide-react";
 import { notFound } from "next/navigation";
 
 const postSchema = z.object({
-  titleVi: z.string().min(1),
+  titleVi: z.string().min(1, "Tiêu đề tiếng Việt bắt buộc"),
   titleEn: z.string().optional(),
   contentVi: z.string().optional(),
   contentEn: z.string().optional(),
@@ -36,6 +36,12 @@ const postSchema = z.object({
 });
 
 type PostFormData = z.infer<typeof postSchema>;
+
+const STATUS_LABEL: Record<string, { label: string; className: string }> = {
+  DRAFT: { label: "Bản nháp", className: "bg-muted text-muted-foreground" },
+  PUBLISHED: { label: "Đã đăng", className: "bg-emerald-500/10 text-emerald-600" },
+  SCHEDULED: { label: "Đã lên lịch", className: "bg-amber-500/10 text-amber-600" },
+};
 
 export default function EditPostPage({
   params,
@@ -52,6 +58,7 @@ export default function EditPostPage({
   const [images, setImages] = useState<FeaturedImageResult[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [scheduling, setScheduling] = useState(false);
 
@@ -101,33 +108,57 @@ export default function EditPostPage({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
-  async function onSubmit(data: PostFormData, publish: boolean) {
+  function buildUpdateDto(data: PostFormData) {
+    return {
+      titleVi: data.titleVi,
+      titleEn: data.titleEn || data.titleVi,
+      excerptVi: data.excerptVi,
+      excerptEn: data.excerptEn || data.excerptVi,
+      contentVi: data.contentVi,
+      contentEn: data.contentEn || data.contentVi,
+      categoryId: data.categoryId || undefined,
+      imageIds: images.map((img) => img.mediaId),
+      metaTitleVi: data.metaTitleVi,
+      metaDescriptionVi: data.metaDescriptionVi,
+    };
+  }
+
+  async function onConfirmEdit(data: PostFormData) {
     if (!post) return;
     setSubmitting(true);
     setError(null);
+    setSuccess(null);
     try {
-      await updatePost(id, {
-        titleVi: data.titleVi,
-        titleEn: data.titleEn || data.titleVi,
-        excerptVi: data.excerptVi,
-        excerptEn: data.excerptEn || data.excerptVi,
-        contentVi: data.contentVi,
-        contentEn: data.contentEn || data.contentVi,
-        categoryId: data.categoryId || undefined,
-        imageIds: images.map((img) => img.mediaId),
-        metaTitleVi: data.metaTitleVi,
-        metaDescriptionVi: data.metaDescriptionVi,
-      });
-
-      if (publish) {
-        await publishPost(id);
-      } else if (post.status === "PUBLISHED") {
-        await unpublishPost(id);
-      }
-
-      router.push(`/${locale}/portal/posts`);
+      const updated = await updatePost(id, buildUpdateDto(data));
+      setPost(updated);
+      setSuccess("Đã cập nhật bài viết thành công.");
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : "Lỗi khi lưu bài viết");
+      setError(e instanceof Error ? e.message : "Lỗi khi cập nhật bài viết");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  function onInvalid() {
+    setSuccess(null);
+    setError("Vui lòng kiểm tra lại các trường bắt buộc (tiêu đề tiếng Việt) trước khi xác nhận.");
+  }
+
+  async function handlePublishToggle() {
+    if (!post) return;
+    setSubmitting(true);
+    setError(null);
+    setSuccess(null);
+    try {
+      if (post.status === "PUBLISHED") {
+        const updated = await unpublishPost(id);
+        setPost(updated);
+      } else {
+        const updated = await publishPost(id);
+        setPost(updated);
+      }
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Lỗi khi thay đổi trạng thái đăng bài");
     } finally {
       setSubmitting(false);
     }
@@ -137,20 +168,10 @@ export default function EditPostPage({
     if (!post) return;
     setScheduling(true);
     setError(null);
+    setSuccess(null);
     try {
       const data = form.getValues();
-      await updatePost(id, {
-        titleVi: data.titleVi,
-        titleEn: data.titleEn || data.titleVi,
-        excerptVi: data.excerptVi,
-        excerptEn: data.excerptEn || data.excerptVi,
-        contentVi: data.contentVi,
-        contentEn: data.contentEn || data.contentVi,
-        categoryId: data.categoryId || undefined,
-        imageIds: images.map((img) => img.mediaId),
-        metaTitleVi: data.metaTitleVi,
-        metaDescriptionVi: data.metaDescriptionVi,
-      });
+      await updatePost(id, buildUpdateDto(data));
       const updated = await schedulePost(id, isoDate);
       setPost(updated);
     } catch (e: unknown) {
@@ -164,6 +185,7 @@ export default function EditPostPage({
     if (!post) return;
     setScheduling(true);
     setError(null);
+    setSuccess(null);
     try {
       const updated = await unschedulePost(id);
       setPost(updated);
@@ -185,29 +207,55 @@ export default function EditPostPage({
   if (!post) return null;
 
   const { register, handleSubmit, control, formState: { errors } } = form;
+  const statusInfo = STATUS_LABEL[post.status] ?? STATUS_LABEL.DRAFT;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
+      <div className="sticky top-0 z-10 -mx-4 border-b border-border bg-background/95 px-4 py-3 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => router.back()}
+              className="rounded-lg p-1.5 hover:bg-muted transition-colors"
+            >
+              <ArrowLeft size={18} />
+            </button>
+            <div>
+              <div className="flex items-center gap-2">
+                <h1 className="text-xl font-bold text-foreground">Chỉnh sửa bài viết</h1>
+                <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${statusInfo.className}`}>
+                  {statusInfo.label}
+                </span>
+              </div>
+              <p className="text-xs text-muted-foreground">{post.titleVi}</p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleSubmit(onConfirmEdit, onInvalid)}
+            disabled={submitting || scheduling}
+            className="flex items-center gap-2 rounded-lg bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-60 transition-colors"
+          >
+            <CheckCircle2 size={16} />
+            {submitting ? "Đang cập nhật..." : "Xác nhận chỉnh sửa"}
+          </button>
+        </div>
+      </div>
+
       {error && (
         <div className="rounded-lg bg-destructive/10 px-4 py-3 text-sm text-destructive">
           {error}
         </div>
       )}
+      {success && (
+        <div className="rounded-lg bg-emerald-500/10 px-4 py-3 text-sm text-emerald-600">
+          {success}
+        </div>
+      )}
 
-      <div className="flex items-center gap-3">
-        <button
-          onClick={() => router.back()}
-          className="rounded-lg p-1.5 hover:bg-muted transition-colors"
-        >
-          <ArrowLeft size={18} />
-        </button>
-        <h1 className="text-2xl font-bold text-foreground">
-          Chỉnh sửa bài viết
-        </h1>
-      </div>
-
-      <div className="grid gap-6 lg:grid-cols-[1fr_300px]">
-        <div className="space-y-4">
+      <div className="grid gap-5 lg:grid-cols-[1fr_320px]">
+        <div className="space-y-4 rounded-xl border border-border bg-card p-5">
           <div className="flex gap-1 border-b border-border">
             {(["vi", "en"] as const).map((lang) => (
               <button
@@ -232,7 +280,7 @@ export default function EditPostPage({
                 className="w-full rounded-lg border border-input bg-background px-4 py-3 text-lg font-semibold placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
               />
               {errors.titleVi && (
-                <p className="text-xs text-destructive">Tiêu đề tiếng Việt bắt buộc</p>
+                <p className="text-xs text-destructive">{errors.titleVi.message}</p>
               )}
               <input
                 {...register("excerptVi")}
@@ -303,25 +351,15 @@ export default function EditPostPage({
 
         <div className="space-y-4">
           <div className="rounded-xl border border-border bg-card p-4 space-y-3">
-            <h3 className="text-sm font-semibold text-foreground">Xuất bản</h3>
-            <div className="flex flex-col gap-2">
-              <button
-                type="button"
-                onClick={handleSubmit((d) => onSubmit(d, true), (errs) => console.error("Form validation failed:", errs))}
-                disabled={submitting || scheduling}
-                className="w-full rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-60 transition-colors"
-              >
-                {submitting ? "Đang lưu..." : "Đăng ngay"}
-              </button>
-              <button
-                type="button"
-                onClick={handleSubmit((d) => onSubmit(d, false), (errs) => console.error("Form validation failed:", errs))}
-                disabled={submitting || scheduling}
-                className="w-full rounded-lg border border-border px-4 py-2 text-sm font-medium hover:bg-muted transition-colors"
-              >
-                Lưu nháp
-              </button>
-            </div>
+            <h3 className="text-sm font-semibold text-foreground">Trạng thái đăng bài</h3>
+            <button
+              type="button"
+              onClick={handlePublishToggle}
+              disabled={submitting || scheduling}
+              className="w-full rounded-lg border border-border px-4 py-2 text-sm font-medium hover:bg-muted disabled:opacity-60 transition-colors"
+            >
+              {post.status === "PUBLISHED" ? "Gỡ đăng bài" : "Đăng bài ngay"}
+            </button>
             <div className="border-t border-border pt-3">
               <p className="mb-2 text-xs text-muted-foreground">Hoặc lên lịch đăng</p>
               <SchedulePicker
