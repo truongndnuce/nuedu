@@ -210,8 +210,8 @@ export default function EditPostPage({
   const statusInfo = STATUS_LABEL[post.status] ?? STATUS_LABEL.DRAFT;
 
   return (
-    <div className="space-y-5">
-      <div className="sticky top-0 z-10 -mx-4 border-b border-border bg-background/95 px-4 py-3 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+    <div className="flex h-full flex-col">
+      <div className="shrink-0 border-b border-border bg-background/95 px-1 pb-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <button
@@ -243,36 +243,41 @@ export default function EditPostPage({
         </div>
       </div>
 
-      {error && (
-        <div className="rounded-lg bg-destructive/10 px-4 py-3 text-sm text-destructive">
-          {error}
-        </div>
-      )}
-      {success && (
-        <div className="rounded-lg bg-emerald-500/10 px-4 py-3 text-sm text-emerald-600">
-          {success}
+      {(error || success) && (
+        <div className="shrink-0 space-y-2 pt-4">
+          {error && (
+            <div className="rounded-lg bg-destructive/10 px-4 py-3 text-sm text-destructive">
+              {error}
+            </div>
+          )}
+          {success && (
+            <div className="rounded-lg bg-emerald-500/10 px-4 py-3 text-sm text-emerald-600">
+              {success}
+            </div>
+          )}
         </div>
       )}
 
-      <div className="grid gap-5 lg:grid-cols-[1fr_320px]">
-        <div className="space-y-4 rounded-xl border border-border bg-card p-5">
-          <div className="flex gap-1 border-b border-border">
-            {(["vi", "en"] as const).map((lang) => (
-              <button
-                key={lang}
-                onClick={() => setActiveTab(lang)}
-                className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-                  activeTab === lang
-                    ? "border-primary text-primary"
-                    : "border-transparent text-muted-foreground"
-                }`}
-              >
-                {lang === "vi" ? "Tiếng Việt" : "English"}
-              </button>
-            ))}
-          </div>
+      <div className="min-h-0 flex-1 overflow-y-auto pt-5">
+        <div className="grid gap-5 lg:grid-cols-[1fr_320px]">
+          <div className="space-y-4 rounded-xl border border-border bg-card p-5">
+            <div className="flex gap-1 border-b border-border">
+              {(["vi", "en"] as const).map((lang) => (
+                <button
+                  key={lang}
+                  onClick={() => setActiveTab(lang)}
+                  className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+                    activeTab === lang
+                      ? "border-primary text-primary"
+                      : "border-transparent text-muted-foreground"
+                  }`}
+                >
+                  {lang === "vi" ? "Tiếng Việt" : "English"}
+                </button>
+              ))}
+            </div>
 
-          {activeTab === "vi" ? (
+            {activeTab === "vi" ? (
             <>
               <input
                 {...register("titleVi")}
@@ -396,6 +401,7 @@ export default function EditPostPage({
               onChange={setImages}
             />
           </div>
+        </div>
         </div>
       </div>
     </div>

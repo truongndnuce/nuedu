@@ -17,6 +17,7 @@ import {
   type ConvMessage,
 } from "@/lib/api/chat.api";
 import { useAuth } from "@/lib/auth/useAuth";
+import { TypingDots } from "@/components/chat/TypingDots";
 import { format } from "date-fns";
 import { vi as viLocale } from "date-fns/locale";
 import { cn } from "@/lib/utils";
@@ -109,10 +110,14 @@ export default function ConversationPage({
   }
 
   async function handleAssign() {
-    if (!conv) return;
+    if (!conv || !user) return;
     try {
       await assignToSelf(id);
-      setConv({ ...conv, status: "assigned" });
+      setConv({
+        ...conv,
+        status: "assigned",
+        assignedStaff: { id: user.id, fullName: user.name },
+      });
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Lỗi khi giao chat");
     }
@@ -287,13 +292,9 @@ export default function ConversationPage({
       {conv.status !== "closed" ? (
         <div className="border-t border-border px-6 py-4 bg-background">
           {guestTyping && (
-            <div className="flex items-center gap-1.5 mb-2 text-xs text-muted-foreground">
-              <span className="inline-flex gap-0.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground animate-bounce [animation-delay:0ms]" />
-                <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground animate-bounce [animation-delay:150ms]" />
-                <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground animate-bounce [animation-delay:300ms]" />
-              </span>
-              {guestDisplayName} đang gõ...
+            <div className="flex items-center gap-2 mb-2 text-xs text-muted-foreground">
+              <TypingDots />
+              <span>{guestDisplayName} đang gõ...</span>
             </div>
           )}
           {!isAssignedToMe ? (

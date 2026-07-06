@@ -1,12 +1,15 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { Extension } from "@tiptap/core";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Underline from "@tiptap/extension-underline";
 import Link from "@tiptap/extension-link";
 import Image from "@tiptap/extension-image";
 import Placeholder from "@tiptap/extension-placeholder";
+import { TextStyle } from "@tiptap/extension-text-style";
+import FontFamily from "@tiptap/extension-font-family";
 import {
   Bold,
   Italic,
@@ -23,6 +26,61 @@ import {
 } from "lucide-react";
 import { uploadFile } from "@/lib/api/uploadLocal";
 import { cn } from "@/lib/utils";
+
+declare module "@tiptap/core" {
+  interface Commands<ReturnType> {
+    fontSize: {
+      setFontSize: (fontSize: string) => ReturnType;
+      unsetFontSize: () => ReturnType;
+    };
+  }
+}
+
+const FontSize = Extension.create({
+  name: "fontSize",
+  addOptions() {
+    return { types: ["textStyle"] };
+  },
+  addGlobalAttributes() {
+    return [
+      {
+        types: this.options.types,
+        attributes: {
+          fontSize: {
+            default: null,
+            parseHTML: (element) => element.style.fontSize || null,
+            renderHTML: (attributes) => {
+              if (!attributes.fontSize) return {};
+              return { style: `font-size: ${attributes.fontSize}` };
+            },
+          },
+        },
+      },
+    ];
+  },
+  addCommands() {
+    return {
+      setFontSize:
+        (fontSize) =>
+        ({ chain }) =>
+          chain().setMark("textStyle", { fontSize }).run(),
+      unsetFontSize:
+        () =>
+        ({ chain }) =>
+          chain().setMark("textStyle", { fontSize: null }).removeEmptyTextStyle().run(),
+    };
+  },
+});
+
+const FONT_SIZES = ["12px", "14px", "16px", "18px", "20px", "24px", "28px", "32px"];
+const FONT_FAMILIES = [
+  { label: "Mặc định", value: "" },
+  { label: "Arial", value: "Arial, sans-serif" },
+  { label: "Times New Roman", value: "'Times New Roman', serif" },
+  { label: "Georgia", value: "Georgia, serif" },
+  { label: "Courier New", value: "'Courier New', monospace" },
+  { label: "Verdana", value: "Verdana, sans-serif" },
+];
 
 interface PostEditorProps {
   content: string;
@@ -54,6 +112,9 @@ export function PostEditor({ content, onChange, placeholder }: PostEditorProps) 
       Link.configure({ openOnClick: false }),
       Image,
       Placeholder.configure({ placeholder: placeholder ?? "Bắt đầu viết..." }),
+      TextStyle,
+      FontFamily,
+      FontSize,
     ],
     content,
     onUpdate: ({ editor }) => {
@@ -144,6 +205,46 @@ export function PostEditor({ content, onChange, placeholder }: PostEditorProps) 
     <div className="rounded-xl border border-border overflow-hidden">
       {/* Toolbar */}
       <div className="flex flex-wrap items-center gap-0.5 border-b border-border bg-muted/30 px-2 py-1.5">
+        <select
+          title="Font chữ"
+          value={editor.getAttributes("textStyle").fontFamily ?? ""}
+          onChange={(e) => {
+            const value = e.target.value;
+            if (value) {
+              editor.chain().focus().setFontFamily(value).run();
+            } else {
+              editor.chain().focus().unsetFontFamily().run();
+            }
+          }}
+          className="rounded border border-transparent bg-transparent px-1.5 py-1 text-sm hover:bg-muted focus:outline-none"
+        >
+          {FONT_FAMILIES.map((f) => (
+            <option key={f.label} value={f.value}>
+              {f.label}
+            </option>
+          ))}
+        </select>
+        <select
+          title="Cỡ chữ"
+          value={editor.getAttributes("textStyle").fontSize ?? ""}
+          onChange={(e) => {
+            const value = e.target.value;
+            if (value) {
+              editor.chain().focus().setFontSize(value).run();
+            } else {
+              editor.chain().focus().unsetFontSize().run();
+            }
+          }}
+          className="rounded border border-transparent bg-transparent px-1.5 py-1 text-sm hover:bg-muted focus:outline-none"
+        >
+          <option value="">Cỡ chữ</option>
+          {FONT_SIZES.map((size) => (
+            <option key={size} value={size}>
+              {size}
+            </option>
+          ))}
+        </select>
+        <div className="mx-1 h-4 w-px bg-border" />
         {tools.map(({ icon: Icon, title, action, active }) => (
           <button
             key={title}
@@ -183,7 +284,7 @@ export function PostEditor({ content, onChange, placeholder }: PostEditorProps) 
       {/* Content area */}
       <EditorContent
         editor={editor}
-        className="prose prose-sm max-w-none min-h-[300px] px-4 py-3 focus-within:outline-none [&_.tiptap]:outline-none [&_.tiptap]:min-h-[280px]"
+        className="tiptap-content text-sm min-h-[300px] max-h-[500px] overflow-y-auto px-4 py-3 focus-within:outline-none [&_.tiptap]:outline-none [&_.tiptap]:min-h-[280px]"
       />
     </div>
   );

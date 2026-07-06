@@ -4,6 +4,7 @@ import { useRef, useEffect, useState } from "react";
 import { Send, X } from "lucide-react";
 import { useGuestChat } from "./useGuestChat";
 import { MessageBubble } from "./MessageBubble";
+import { TypingDots } from "@/components/chat/TypingDots";
 
 interface ChatPanelProps {
   onClose: () => void;
@@ -46,9 +47,8 @@ export function ChatPanel({ onClose }: ChatPanelProps) {
           <MessageBubble key={msg.id} msg={msg} />
         ))}
         {isTyping && (
-          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <span className="animate-pulse">•••</span>
-            <span>đang gõ...</span>
+          <div className="flex items-start">
+            <TypingDots />
           </div>
         )}
         <div ref={endRef} />

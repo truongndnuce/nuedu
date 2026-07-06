@@ -114,7 +114,7 @@ export default async function PostDetailPage({
 
           {/* Content */}
           <div
-            className="prose prose-green mt-10 max-w-none"
+            className="tiptap-content mt-10"
             dangerouslySetInnerHTML={{ __html: content ?? "" }}
           />
         </div>

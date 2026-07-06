@@ -137,3 +137,92 @@
     @apply font-sans;
   }
 }
+
+/* Shared rich-text rendering for tiptap editor output (admin editor + public post pages) */
+.tiptap-content {
+  color: var(--foreground);
+  line-height: 1.7;
+}
+.tiptap-content p {
+  margin: 0.6em 0;
+}
+.tiptap-content h2 {
+  font-size: 1.35em;
+  font-weight: 700;
+  margin: 1em 0 0.5em;
+}
+.tiptap-content h3 {
+  font-size: 1.15em;
+  font-weight: 600;
+  margin: 1em 0 0.5em;
+}
+.tiptap-content ul {
+  list-style: disc;
+  padding-left: 1.5em;
+  margin: 0.6em 0;
+}
+.tiptap-content ol {
+  list-style: decimal;
+  padding-left: 1.5em;
+  margin: 0.6em 0;
+}
+.tiptap-content li {
+  margin: 0.25em 0;
+}
+.tiptap-content li p {
+  margin: 0;
+}
+.tiptap-content blockquote {
+  border-left: 3px solid var(--border);
+  padding-left: 1em;
+  margin: 0.75em 0;
+  color: var(--muted-foreground);
+  font-style: italic;
+}
+.tiptap-content pre {
+  background: var(--muted);
+  border-radius: var(--radius-md);
+  padding: 0.75em 1em;
+  overflow-x: auto;
+}
+.tiptap-content code {
+  background: var(--muted);
+  border-radius: 0.25em;
+  padding: 0.1em 0.35em;
+  font-size: 0.9em;
+}
+.tiptap-content pre code {
+  background: none;
+  padding: 0;
+}
+.tiptap-content a {
+  color: var(--primary);
+  text-decoration: underline;
+}
+.tiptap-content img {
+  max-width: 100%;
+  border-radius: var(--radius-md);
+}
+
+/* Messenger-style typing indicator dots (used by chat widget + portal chat) */
+@keyframes typing-wave {
+  0%,
+  60%,
+  100% {
+    transform: translateY(0) scale(0.85);
+    opacity: 0.5;
+  }
+  30% {
+    transform: translateY(-4px) scale(1);
+    opacity: 1;
+  }
+}
+.typing-dot {
+  animation: typing-wave 1.3s ease-in-out infinite;
+}
+.typing-dot:nth-child(2) {
+  animation-delay: 0.15s;
+}
+.typing-dot:nth-child(3) {
+  animation-delay: 0.3s;
+}
