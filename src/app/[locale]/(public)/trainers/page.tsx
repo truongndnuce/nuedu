@@ -1,9 +1,28 @@
+import type { Metadata } from "next";
 import { getTranslations, getLocale } from "next-intl/server";
 import { TrainerCard } from "@/components/public/TrainerCard";
 import type { ApiTrainer } from "@/lib/api/trainers.api";
+import { buildPageMetadata } from "@/lib/seo";
 
 const API_BASE =
   process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000/api/v1";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  return buildPageMetadata({
+    title: locale === "vi" ? "Khóa học & giảng viên" : "Courses & trainers",
+    description:
+      locale === "vi"
+        ? "Đội ngũ giảng viên giàu kinh nghiệm trực tiếp giảng dạy tại NUEDU — học viện đào tạo nghề PT Gym."
+        : "Meet the experienced instructor team teaching at NUEDU, the PT Gym career academy.",
+    locale,
+    path: "/trainers",
+  });
+}
 
 async function fetchTrainers(): Promise<ApiTrainer[]> {
   try {

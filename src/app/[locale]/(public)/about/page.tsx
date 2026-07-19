@@ -1,5 +1,27 @@
+import type { Metadata } from "next";
 import { useTranslations, useLocale } from "next-intl";
 import { aboutContent } from "@/content/about";
+import { buildPageMetadata } from "@/lib/seo";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  return buildPageMetadata({
+    title:
+      locale === "vi"
+        ? "Giới thiệu — Học viện đào tạo nghề PT Gym"
+        : "About us — PT Gym career academy",
+    description:
+      locale === "vi"
+        ? "Tìm hiểu về NUEDU — học viện đào tạo huấn luyện viên thể hình tiên phong xây dựng hệ sinh thái Fitness tại Việt Nam."
+        : "Learn about NUEDU — a pioneering personal trainer academy building Vietnam's fitness ecosystem.",
+    locale,
+    path: "/about",
+  });
+}
 
 export default function AboutPage() {
   const t = useTranslations("about");

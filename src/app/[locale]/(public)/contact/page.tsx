@@ -1,6 +1,25 @@
+import type { Metadata } from "next";
 import { useTranslations, useLocale } from "next-intl";
 import { MapPin, Phone, Mail, Clock } from "lucide-react";
 import { ContactForm } from "@/components/public/ContactForm";
+import { buildPageMetadata } from "@/lib/seo";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  return buildPageMetadata({
+    title: locale === "vi" ? "Liên hệ" : "Contact",
+    description:
+      locale === "vi"
+        ? "Liên hệ NUEDU để được tư vấn khóa học nghề PT Gym — địa chỉ, hotline, email và bản đồ chỉ đường tại Hà Nội và TP.HCM."
+        : "Contact NUEDU for PT Gym course consultation — address, hotline, email, and directions in Hanoi and Ho Chi Minh City.",
+    locale,
+    path: "/contact",
+  });
+}
 
 export default function ContactPage() {
   const t = useTranslations("contact");
