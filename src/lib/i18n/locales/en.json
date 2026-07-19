@@ -16,7 +16,7 @@
   "nav": {
     "home": "Home",
     "news": "News",
-    "trainers": "Trainers",
+    "trainers": "Courses",
     "about": "About",
     "contact": "Contact",
     "portal": "Portal"
@@ -24,7 +24,7 @@
   "home": {
     "heroTitle": "Professional PT Gym career training",
     "heroSubtitle": "NUEDU trains personal trainers through an A-Z curriculum: anatomy, nutrition, coaching technique, real practice, and career direction.",
-    "heroCtaPrimary": "View training program",
+    "heroCtaPrimary": "Get roadmap & tuition",
     "heroCtaSecondary": "Why NUEDU",
     "servicesTitle": "What you learn at NUEDU",
     "trainersTitle": "Instructor team",
@@ -41,6 +41,10 @@
   "trainers": {
     "title": "Our Trainers",
     "subtitle": "Meet our specialists"
+  },
+  "contact": {
+    "title": "Contact",
+    "subtitle": "Leave your info and the NUEDU team will get back to you shortly"
   },
   "about": {
     "title": "About Us",

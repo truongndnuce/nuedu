@@ -19,6 +19,7 @@ export function Header() {
     { href: `/${locale}/news`, label: t("news") },
     { href: `/${locale}/trainers`, label: t("trainers") },
     { href: `/${locale}/about`, label: t("about") },
+    { href: `/${locale}/contact`, label: t("contact") },
   ];
 
   function switchLocale(newLocale: string) {

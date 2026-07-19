@@ -1,7 +1,8 @@
 import { getTranslations, getLocale } from "next-intl/server";
 import Image from "next/image";
 import { Hero } from "@/components/public/Hero";
-import { ServiceCard } from "@/components/public/ServiceCard";
+import { CurriculumCard } from "@/components/public/CurriculumCard";
+import { GraduateOutcomes } from "@/components/public/GraduateOutcomes";
 import { TrainerCard } from "@/components/public/TrainerCard";
 import { TestimonialMarquee } from "@/components/public/TestimonialMarquee";
 import { LeadCapturePopup } from "@/components/public/LeadCapturePopup";
@@ -9,65 +10,96 @@ import type { ApiTrainer } from "@/lib/api/trainers.api";
 import type { ApiTestimonial } from "@/lib/api/testimonials.api";
 import Link from "next/link";
 import {
-  Apple,
   BadgeCheck,
   BriefcaseBusiness,
-  Dumbbell,
-  HeartPulse,
   ShieldCheck,
   Target,
   Trophy,
   Users,
 } from "lucide-react";
 
-const services = [
+const curriculum = [
   {
-    icon: Dumbbell,
-    image: "/images/gym/gym-workout.jpg",
-    titleVi: "Giải phẫu & kỹ thuật tập",
-    titleEn: "Anatomy & training technique",
-    descVi: "Nắm nền tảng cơ xương khớp, chuyển động và kỹ thuật huấn luyện an toàn.",
-    descEn: "Master musculoskeletal anatomy, movement patterns, and safe coaching technique.",
+    number: "01",
+    titleVi: "Đại cương giải phẫu",
+    titleEn: "Anatomy fundamentals",
+    descVi: "Nền tảng khoa học về cơ thể người — hiểu để thiết kế bài tập đúng và an toàn.",
+    descEn: "The science foundation of the human body — the basis for safe, correct programming.",
+    tagsVi: ["Hệ cơ xương khớp", "Hệ thần kinh", "Tim mạch & hô hấp", "Sinh lý cơ vận"],
+    tagsEn: ["Musculoskeletal system", "Nervous system", "Cardio & respiratory", "Muscle physiology"],
+    durationVi: "11 buổi lý thuyết",
+    durationEn: "11 theory sessions",
   },
   {
-    icon: Apple,
-    image: "/images/gym/gym-barbell.jpg",
-    titleVi: "Dinh dưỡng & thực phẩm bổ sung",
-    titleEn: "Nutrition & supplementation",
-    descVi: "Thiết kế chế độ tăng cân, giảm cân, phục hồi và hiểu sản phẩm ngoài thị trường.",
-    descEn: "Build gain, cut, and recovery nutrition plans while understanding supplements.",
+    number: "02",
+    titleVi: "Khoa học dinh dưỡng",
+    titleEn: "Nutrition science",
+    descVi: "Thiết kế chế độ ăn khoa học theo từng mục tiêu — giảm mỡ, tăng cơ, hiệu suất.",
+    descEn: "Build science-based diets for each goal — fat loss, muscle gain, performance.",
+    tagsVi: ["TDEE & Macro", "Thời điểm nạp", "Supplement", "Thiết kế thực đơn"],
+    tagsEn: ["TDEE & Macro", "Nutrient timing", "Supplements", "Meal planning"],
+    durationVi: "14 buổi lý thuyết",
+    durationEn: "14 theory sessions",
   },
   {
-    icon: HeartPulse,
-    image: "/images/gym/gym-training.jpg",
-    titleVi: "Huấn luyện khách hàng thực tế",
-    titleEn: "Real client coaching",
-    descVi: "Thực hành đánh giá thể trạng, lên giáo án và xử lý nhóm khách hàng đặc thù.",
-    descEn: "Practice assessment, programming, and coaching for different client profiles.",
+    number: "03",
+    titleVi: "Thiết kế chương trình tập",
+    titleEn: "Program design",
+    descVi: "Lập giáo án theo mô hình OPT — từ thẩm định đến thiết kế lộ trình 12 tuần.",
+    descEn: "Build training plans with the OPT model — from assessment to a 12-week roadmap.",
+    tagsVi: ["OPT Model", "Inbody analysis", "Full body / Split", "Corrective exercise"],
+    tagsEn: ["OPT Model", "Inbody analysis", "Full body / Split", "Corrective exercise"],
+    durationVi: "12 buổi lý thuyết",
+    durationEn: "12 theory sessions",
   },
   {
-    icon: BriefcaseBusiness,
-    image: "/images/gym/gym-academy-floor.jpg",
-    titleVi: "Bán hàng & định hướng nghề",
-    titleEn: "Sales & career direction",
-    descVi: "Rèn quy trình tư vấn, chốt hợp đồng, xây thương hiệu cá nhân và lộ trình đi làm.",
-    descEn: "Train consultation, closing, personal branding, and post-course career planning.",
+    number: "04",
+    titleVi: "Tư vấn & Bán hàng",
+    titleEn: "Consulting & sales",
+    descVi: "Kỹ năng kiếm tiền của PT — tìm kiếm, tư vấn, chốt hợp đồng và giữ chân khách.",
+    descEn: "The PT's income skillset — prospecting, consulting, closing, and client retention.",
+    tagsVi: ["Telesale", "Đọc Inbody cho KH", "Xử lý từ chối", "Chăm sóc sau hợp đồng"],
+    tagsEn: ["Telesales", "Reading client Inbody", "Objection handling", "Post-sale care"],
+    durationVi: "12 buổi lý thuyết",
+    durationEn: "12 theory sessions",
+  },
+  {
+    number: "05",
+    titleVi: "Thực hành chuyên sâu",
+    titleEn: "Intensive practice",
+    descVi: "Module nặng nhất — 59 buổi thực hành trực tiếp tại phòng gym NuEdu.",
+    descEn: "The heaviest module — 59 hands-on sessions at the NuEdu training gym.",
+    tagsVi: ["Kỹ thuật Squat/DL/BP", "Functional training", "Hypertrophy", "Plyometrics", "Stretching", "Xử lý chấn thương"],
+    tagsEn: ["Squat/DL/BP technique", "Functional training", "Hypertrophy", "Plyometrics", "Stretching", "Injury handling"],
+    durationVi: "59 buổi thực hành",
+    durationEn: "59 practice sessions",
+  },
+  {
+    number: "06",
+    titleVi: "Giới thiệu việc làm",
+    titleEn: "Job placement",
+    descVi: "Cam kết đầu ra — kết nối học viên với 50+ phòng tập đối tác trên toàn quốc.",
+    descEn: "Outcome commitment — connecting graduates with 50+ partner gyms nationwide.",
+    tagsVi: ["CV & Portfolio PT", "Phỏng vấn", "Nutrition Fitness", "Network đối tác"],
+    tagsEn: ["CV & PT portfolio", "Interviews", "Nutrition Fitness", "Partner network"],
+    durationVi: "Cam kết sau TN",
+    durationEn: "Guaranteed post-graduation",
   },
 ];
 
 const trainingZones = [
   {
-    image: "/images/gym/gym-academy-floor.jpg",
+    image: "/images/gym/gym-classroom.jpg",
     vi: "Phòng học thực hành",
     en: "Hands-on classroom",
   },
   {
-    image: "/images/gym/gym-dumbbells.jpg",
+    image: "/images/gym/gym-technique-lab.jpg",
     vi: "Khu rèn kỹ thuật",
     en: "Technique lab",
   },
   {
-    image: "/images/gym/gym-barbell.jpg",
+    image: "/images/gym/gym-competition.jpg",
     vi: "Độ body & thi đấu",
     en: "Body prep & competition",
   },
@@ -145,7 +177,7 @@ export default async function HomePage() {
               <p className="text-sm font-bold uppercase text-primary">
                 {locale === "vi" ? "Khóa học nghề PT" : "PT career program"}
               </p>
-              <h2 className="mt-2 text-3xl font-black text-foreground sm:text-5xl">
+              <h2 className="mt-2 text-3xl font-black uppercase text-accent sm:text-5xl">
                 {t("servicesTitle")}
               </h2>
             </div>
@@ -155,9 +187,9 @@ export default async function HomePage() {
                 : "A personal trainer program that moves from science foundations to real coaching, sales, and career execution."}
             </p>
           </div>
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {services.map((service) => (
-              <ServiceCard key={service.titleEn} {...service} locale={locale} />
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {curriculum.map((item) => (
+              <CurriculumCard key={item.number} {...item} locale={locale} />
             ))}
           </div>
         </div>
@@ -237,10 +269,12 @@ export default async function HomePage() {
         </div>
       </section>
 
+      <GraduateOutcomes locale={locale} />
+
       <section className="bg-background py-16 sm:py-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
           <div className="mb-10 flex items-center justify-between gap-4 sm:mb-12">
-            <h2 className="text-3xl font-black text-foreground sm:text-5xl">
+            <h2 className="text-3xl font-black uppercase text-[#0e7c52] sm:text-5xl">
               {t("trainersTitle")}
             </h2>
             <Link
@@ -265,10 +299,10 @@ export default async function HomePage() {
               <p className="text-sm font-bold uppercase text-primary">
                 {locale === "vi" ? "Học viên nói gì" : "What students say"}
               </p>
-              <h2 className="mt-2 text-3xl font-black text-foreground sm:text-5xl">
+              <h2 className="mt-2 text-3xl font-black uppercase text-[#0e7c52] sm:text-5xl">
                 {locale === "vi"
-                  ? "Phản hồi từ học viên"
-                  : "Student testimonials"}
+                  ? "Học viên nói gì về NUEDU"
+                  : "What students say about NUEDU"}
               </h2>
             </div>
           </div>

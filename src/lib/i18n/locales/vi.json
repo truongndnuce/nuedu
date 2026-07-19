@@ -16,15 +16,15 @@
   "nav": {
     "home": "Trang chủ",
     "news": "Tin tức",
-    "trainers": "Giáo viên",
+    "trainers": "Khóa học",
     "about": "Giới thiệu",
     "contact": "Liên hệ",
     "portal": "Quản lý"
   },
   "home": {
     "heroTitle": "Đào tạo nghề PT Gym chuyên nghiệp",
-    "heroSubtitle": "Học viện NUEDU đào tạo huấn luyện viên thể hình theo giáo trình A-Z: giải phẫu, dinh dưỡng, kỹ thuật huấn luyện, thực chiến và định hướng việc làm.",
-    "heroCtaPrimary": "Xem khóa đào tạo",
+    "heroSubtitle": "Đào tạo từ giải phẫu, dinh dưỡng, kỹ thuật tập luyện, thiết kế giáo án đến tư vấn khách hàng và thực hành làm nghề. Hơn 2000 học viên NuEdu đã tốt nghiệp và làm việc tại các hệ thống Fitness trên toàn quốc.",
+    "heroCtaPrimary": "Nhận lộ trình & học phí",
     "heroCtaSecondary": "Vì sao chọn NUEDU",
     "servicesTitle": "Bạn sẽ học gì tại NUEDU",
     "trainersTitle": "Đội ngũ giảng viên",
@@ -46,6 +46,10 @@
     "title": "Giới thiệu",
     "mission": "Sứ mệnh",
     "vision": "Tầm nhìn"
+  },
+  "contact": {
+    "title": "Liên hệ",
+    "subtitle": "Để lại thông tin, đội ngũ tư vấn NUEDU sẽ liên hệ với bạn trong thời gian sớm nhất"
   },
   "chat": {
     "placeholder": "Nhập tin nhắn...",

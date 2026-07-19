@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useTranslations, useLocale } from "next-intl";
 import { ArrowRight, Dumbbell, PlayCircle } from "lucide-react";
+import mainBg from "@/app/main-bg.jpg";
 
 export function Hero() {
   const t = useTranslations("home");
@@ -10,7 +11,7 @@ export function Hero() {
   return (
     <section className="relative min-h-[calc(100dvh-4rem)] overflow-hidden bg-primary text-primary-foreground">
       <Image
-        src="/images/gym/gym-hero.jpg"
+        src={mainBg}
         alt="NUEDU PT academy gym training floor"
         fill
         priority
@@ -26,7 +27,7 @@ export function Hero() {
             <Dumbbell size={15} aria-hidden="true" />
             {locale === "vi" ? "Học viện đào tạo nghề PT Gym" : "PT Gym career academy"}
           </div>
-          <h1 className="text-5xl font-black leading-[0.98] text-white sm:text-7xl lg:text-8xl">
+          <h1 className="text-5xl font-black uppercase leading-[0.98] text-white sm:text-7xl lg:text-8xl">
             {t("heroTitle")}
           </h1>
           <p className="mt-6 max-w-2xl text-lg leading-8 text-white/82 sm:text-xl">
@@ -34,7 +35,7 @@ export function Hero() {
           </p>
           <div className="mt-9 flex flex-wrap items-center gap-4">
             <Link
-              href={`/${locale}/news`}
+              href={`/${locale}/contact`}
               className="inline-flex min-h-12 items-center gap-2 rounded-lg bg-accent px-6 py-3 text-sm font-bold text-accent-foreground shadow-[0_18px_48px_oklch(0.876_0.233_122/0.22)] transition-transform hover:-translate-y-0.5 hover:bg-accent/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
             >
               {t("heroCtaPrimary")}
@@ -49,11 +50,12 @@ export function Hero() {
             </Link>
           </div>
 
-          <div className="mt-10 grid max-w-2xl grid-cols-3 gap-3 text-white sm:gap-4">
+          <div className="mt-10 grid max-w-2xl grid-cols-2 gap-3 text-white sm:gap-4 lg:grid-cols-4">
             {[
-              ["A-Z", locale === "vi" ? "giáo trình nghề PT" : "PT career curriculum"],
-              ["20", locale === "vi" ? "học viên tối đa/lớp" : "students max/class"],
-              ["3T", locale === "vi" ? "thực tập doanh nghiệp" : "business internship"],
+              ["2000+", locale === "vi" ? "Học viên đã tốt nghiệp" : "Graduated students"],
+              ["3 THÁNG", locale === "vi" ? "tự tin ra nghề" : "to confidently start a career"],
+              ["20", locale === "vi" ? "Sĩ số tối đa mỗi lớp" : "students max per class"],
+              ["Toàn quốc", locale === "vi" ? "Mạng lưới đối tác việc làm" : "Employment partner network"],
             ].map(([value, label]) => (
               <div key={value} className="border-l border-accent/70 pl-3">
                 <div className="text-2xl font-black sm:text-3xl">{value}</div>
