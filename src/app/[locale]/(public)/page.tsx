@@ -1,6 +1,7 @@
 import { getTranslations, getLocale } from "next-intl/server";
 import Image from "next/image";
 import { Hero } from "@/components/public/Hero";
+import { Reveal } from "@/components/public/Reveal";
 import { CurriculumCard } from "@/components/public/CurriculumCard";
 import { GraduateOutcomes } from "@/components/public/GraduateOutcomes";
 import { TrainerCard } from "@/components/public/TrainerCard";
@@ -142,7 +143,7 @@ export default async function HomePage() {
 
       <section className="bg-background py-16 sm:py-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
-          <div className="mb-10 flex flex-col gap-4 sm:mb-12 sm:flex-row sm:items-end sm:justify-between">
+          <Reveal className="mb-10 flex flex-col gap-4 sm:mb-12 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <p className="text-sm font-bold uppercase text-primary">
                 {locale === "vi" ? "Khóa học nghề PT" : "PT career program"}
@@ -156,10 +157,12 @@ export default async function HomePage() {
                 ? "Chương trình đào tạo huấn luyện viên thể hình đi từ nền tảng khoa học đến thực chiến bán hàng và làm nghề."
                 : "A personal trainer program that moves from science foundations to real coaching, sales, and career execution."}
             </p>
-          </div>
+          </Reveal>
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {curriculum.map((item) => (
-              <CurriculumCard key={item.number} {...item} locale={locale} />
+            {curriculum.map((item, index) => (
+              <Reveal key={item.number} delay={index * 80}>
+                <CurriculumCard {...item} locale={locale} />
+              </Reveal>
             ))}
           </div>
         </div>
@@ -175,7 +178,7 @@ export default async function HomePage() {
         />
         <div className="absolute inset-0 bg-primary/82" />
         <div className="relative mx-auto grid max-w-7xl gap-8 px-4 sm:px-6 lg:grid-cols-[0.8fr_1.2fr] lg:items-center">
-          <div>
+          <Reveal>
             <p className="text-sm font-bold uppercase text-accent">
               {locale === "vi" ? "Học xen kẽ lý thuyết và vận động" : "Theory mixed with practical work"}
             </p>
@@ -189,31 +192,30 @@ export default async function HomePage() {
                 ? "Nội dung học bám sát nhu cầu tuyển dụng: hiểu cơ thể, biết lên giáo án, biết tư vấn khách hàng và có môi trường thực tập."
                 : "The program follows hiring needs: understand the body, build programs, consult clients, and train in real environments."}
             </p>
-          </div>
+          </Reveal>
 
           <div className="grid gap-4 sm:grid-cols-3">
             {trainingZones.map((zone, index) => (
-              <div
-                key={zone.en}
-                className="group relative aspect-[4/5] overflow-hidden rounded-lg border border-white/12 bg-white/10"
-              >
-                <Image
-                  src={zone.image}
-                  alt={locale === "vi" ? zone.vi : zone.en}
-                  fill
-                  sizes="(min-width: 1024px) 260px, (min-width: 640px) 33vw, 100vw"
-                  className="object-cover transition-transform duration-300 group-hover:scale-105"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/82 via-black/16 to-transparent" />
-                <div className="absolute bottom-4 left-4 right-4">
-                  <div className="mb-2 text-xs font-black text-accent">
-                    0{index + 1}
+              <Reveal key={zone.en} delay={index * 100}>
+                <div className="group relative aspect-[4/5] overflow-hidden rounded-lg border border-white/12 bg-white/10">
+                  <Image
+                    src={zone.image}
+                    alt={locale === "vi" ? zone.vi : zone.en}
+                    fill
+                    sizes="(min-width: 1024px) 260px, (min-width: 640px) 33vw, 100vw"
+                    className="object-cover transition-transform duration-500 group-hover:scale-110"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/82 via-black/16 to-transparent" />
+                  <div className="absolute bottom-4 left-4 right-4">
+                    <div className="mb-2 text-xs font-black text-accent">
+                      0{index + 1}
+                    </div>
+                    <h3 className="text-lg font-bold text-white">
+                      {locale === "vi" ? zone.vi : zone.en}
+                    </h3>
                   </div>
-                  <h3 className="text-lg font-bold text-white">
-                    {locale === "vi" ? zone.vi : zone.en}
-                  </h3>
                 </div>
-              </div>
+              </Reveal>
             ))}
           </div>
         </div>
@@ -223,20 +225,22 @@ export default async function HomePage() {
 
       <section className="bg-background py-16 sm:py-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
-          <div className="mb-10 flex items-center justify-between gap-4 sm:mb-12">
+          <Reveal className="mb-10 flex items-center justify-between gap-4 sm:mb-12">
             <h2 className="text-3xl font-black uppercase text-accent sm:text-5xl">
               {t("trainersTitle")}
             </h2>
             <Link
               href={`/${locale}/trainers`}
-              className="inline-flex min-h-11 items-center rounded-lg bg-primary px-4 text-sm font-bold text-primary-foreground transition-colors hover:bg-primary/90"
+              className="inline-flex min-h-11 items-center rounded-lg bg-primary px-4 text-sm font-bold text-primary-foreground transition-all hover:-translate-y-0.5 hover:bg-primary/90"
             >
               {tc("seeAll")}
             </Link>
-          </div>
+          </Reveal>
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {trainers.map((trainer) => (
-              <TrainerCard key={trainer.id} trainer={trainer} locale={locale} />
+            {trainers.map((trainer, index) => (
+              <Reveal key={trainer.id} delay={index * 80}>
+                <TrainerCard trainer={trainer} locale={locale} />
+              </Reveal>
             ))}
           </div>
         </div>
@@ -245,7 +249,7 @@ export default async function HomePage() {
       {testimonials.length > 0 && (
         <section className="bg-secondary py-16 sm:py-20 overflow-hidden">
           <div className="mx-auto max-w-7xl px-4 sm:px-6">
-            <div className="mb-10 sm:mb-12 text-center">
+            <Reveal className="mb-10 sm:mb-12 text-center">
               <p className="text-sm font-bold uppercase text-primary">
                 {locale === "vi" ? "Học viên nói gì" : "What students say"}
               </p>
@@ -254,7 +258,7 @@ export default async function HomePage() {
                   ? "Học viên nói gì về NUEDU"
                   : "What students say about NUEDU"}
               </h2>
-            </div>
+            </Reveal>
           </div>
           <TestimonialMarquee testimonials={testimonials} locale={locale} />
         </section>
@@ -262,7 +266,7 @@ export default async function HomePage() {
 
       <section className="bg-primary py-16 text-primary-foreground sm:py-20">
         <div className="mx-auto grid max-w-7xl gap-8 px-4 sm:px-6 lg:grid-cols-[1fr_0.8fr] lg:items-center">
-          <div>
+          <Reveal>
             <p className="text-sm font-bold uppercase text-accent">
               {locale === "vi" ? "Tuyển sinh khóa PT Gym" : "PT Gym enrollment"}
             </p>
@@ -276,8 +280,8 @@ export default async function HomePage() {
                 ? "NUEDU đào tạo từ kiến thức, kỹ năng, độ body đến tư vấn nghề nghiệp để học viên có thể bắt đầu làm PT sau khóa học."
                 : "NUEDU trains knowledge, skills, body preparation, and career consulting so students can start working as PTs after the program."}
             </p>
-          </div>
-          <div className="rounded-lg border border-white/12 bg-white/10 p-6">
+          </Reveal>
+          <Reveal delay={120} className="rounded-lg border border-white/12 bg-white/10 p-6">
             <div className="flex items-center gap-3">
               <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-accent text-accent-foreground">
                 <Target size={24} aria-hidden="true" />
@@ -289,12 +293,12 @@ export default async function HomePage() {
             </div>
             <Link
               href={`/${locale}/about`}
-              className="mt-6 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-lg bg-accent px-5 text-sm font-black text-accent-foreground transition-colors hover:bg-accent/90"
+              className="mt-6 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-lg bg-accent px-5 text-sm font-black text-accent-foreground transition-all hover:-translate-y-0.5 hover:bg-accent/90"
             >
               {locale === "vi" ? "Đăng ký tư vấn khóa học" : "Request program consultation"}
               <Trophy size={18} aria-hidden="true" />
             </Link>
-          </div>
+          </Reveal>
         </div>
       </section>
       <LeadCapturePopup locale={locale} />
