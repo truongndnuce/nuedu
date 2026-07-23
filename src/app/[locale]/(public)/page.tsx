@@ -9,14 +9,7 @@ import { LeadCapturePopup } from "@/components/public/LeadCapturePopup";
 import type { ApiTrainer } from "@/lib/api/trainers.api";
 import type { ApiTestimonial } from "@/lib/api/testimonials.api";
 import Link from "next/link";
-import {
-  BadgeCheck,
-  BriefcaseBusiness,
-  ShieldCheck,
-  Target,
-  Trophy,
-  Users,
-} from "lucide-react";
+import { Target, Trophy } from "lucide-react";
 
 const curriculum = [
   {
@@ -102,29 +95,6 @@ const trainingZones = [
     image: "/images/gym/gym-competition.jpg",
     vi: "Độ body & thi đấu",
     en: "Body prep & competition",
-  },
-];
-
-const outcomes = [
-  {
-    icon: BadgeCheck,
-    vi: "Chứng chỉ hành nghề có giá trị toàn quốc",
-    en: "Practice certificate with nationwide value",
-  },
-  {
-    icon: Users,
-    vi: "Sĩ số tối đa 20 học viên để giảng viên theo sát",
-    en: "Maximum 20 students per class for close coaching",
-  },
-  {
-    icon: BriefcaseBusiness,
-    vi: "Hỗ trợ thực tập và giới thiệu việc làm sau tốt nghiệp",
-    en: "Internship support and job referral after graduation",
-  },
-  {
-    icon: ShieldCheck,
-    vi: "Bảo hành khóa học, được dự thính để củng cố kiến thức",
-    en: "Course warranty with audit sessions for knowledge reinforcement",
   },
 ];
 
@@ -249,32 +219,12 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="bg-secondary py-16 sm:py-20">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6">
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {outcomes.map((item) => (
-              <div
-                key={item.en}
-                className="rounded-lg border border-border bg-card p-5 shadow-sm"
-              >
-                <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-                  <item.icon size={22} aria-hidden="true" />
-                </div>
-                <p className="text-sm font-bold leading-6 text-foreground">
-                  {locale === "vi" ? item.vi : item.en}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       <GraduateOutcomes locale={locale} />
 
       <section className="bg-background py-16 sm:py-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
           <div className="mb-10 flex items-center justify-between gap-4 sm:mb-12">
-            <h2 className="text-3xl font-black uppercase text-[#0e7c52] sm:text-5xl">
+            <h2 className="text-3xl font-black uppercase text-accent sm:text-5xl">
               {t("trainersTitle")}
             </h2>
             <Link
@@ -299,7 +249,7 @@ export default async function HomePage() {
               <p className="text-sm font-bold uppercase text-primary">
                 {locale === "vi" ? "Học viên nói gì" : "What students say"}
               </p>
-              <h2 className="mt-2 text-3xl font-black uppercase text-[#0e7c52] sm:text-5xl">
+              <h2 className="mt-2 text-3xl font-black uppercase text-accent sm:text-5xl">
                 {locale === "vi"
                   ? "Học viên nói gì về NUEDU"
                   : "What students say about NUEDU"}

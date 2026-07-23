@@ -33,7 +33,7 @@ export function TrainerCard({ trainer, locale }: TrainerCardProps) {
           {trainer.specialties.map((s) => (
             <span
               key={s}
-              className="rounded-full bg-accent/20 px-2 py-0.5 text-xs font-medium text-accent-foreground"
+              className="rounded-full bg-accent/20 px-2 py-0.5 text-xs font-medium text-accent"
             >
               {s}
             </span>

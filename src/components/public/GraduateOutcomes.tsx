@@ -30,7 +30,7 @@ export function GraduateOutcomes({ locale }: Props) {
           <p className="text-sm font-bold uppercase text-primary">
             {isVi ? "Cam kết đầu ra" : "Outcome commitment"}
           </p>
-          <h2 className="mt-2 text-3xl font-black uppercase text-foreground sm:text-5xl">
+          <h2 className="mt-2 text-3xl font-black uppercase text-accent sm:text-5xl">
             {isVi ? "Việc làm sau tốt nghiệp" : "Career after graduation"}
           </h2>
         </div>
@@ -47,7 +47,7 @@ export function GraduateOutcomes({ locale }: Props) {
             />
           </div>
           <div>
-            <h3 className="text-2xl font-black text-foreground">
+            <h3 className="text-2xl font-black uppercase text-accent">
               {isVi ? "Giấy chứng nhận hoàn thành khóa học" : "Certificate of completion"}
             </h3>
             <p className="mt-3 leading-7 text-muted-foreground">
@@ -59,26 +59,26 @@ export function GraduateOutcomes({ locale }: Props) {
         </div>
 
         {/* 2. Recruitment partners */}
-        <div className="mb-16">
-          <h3 className="mb-3 text-2xl font-black text-foreground">
+        <div className="mb-16 text-center">
+          <h3 className="mb-3 text-2xl font-black uppercase text-accent">
             {isVi ? "Đối tác tuyển dụng" : "Recruitment partners"}
           </h3>
-          <p className="mb-6 max-w-2xl leading-7 text-muted-foreground">
+          <p className="mx-auto mb-6 max-w-2xl leading-7 text-muted-foreground">
             {isVi
               ? "NUEDU liên kết với mạng lưới phòng gym, chuỗi fitness trên toàn quốc, sẵn sàng tuyển dụng học viên ngay sau tốt nghiệp."
               : "NUEDU partners with a nationwide network of gyms and fitness chains, ready to hire graduates right after the program."}
           </p>
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+          <div className="flex flex-wrap justify-center gap-4">
             {partners.map((src, index) => (
               <div
                 key={src}
-                className="group relative aspect-[3/4] overflow-hidden rounded-lg border border-border bg-muted"
+                className="group relative aspect-[3/2] w-full max-w-xs overflow-hidden rounded-lg border border-border bg-muted sm:w-[calc(50%-0.5rem)] lg:w-[calc(33.333%-0.75rem)]"
               >
                 <Image
                   src={src}
                   alt={`${isVi ? "Đối tác tuyển dụng" : "Recruitment partner"} ${index + 1}`}
                   fill
-                  sizes="(min-width: 1024px) 20vw, (min-width: 640px) 33vw, 50vw"
+                  sizes="(min-width: 1024px) 30vw, (min-width: 640px) 45vw, 90vw"
                   className="object-cover transition-transform duration-300 group-hover:scale-105"
                 />
               </div>
@@ -87,11 +87,11 @@ export function GraduateOutcomes({ locale }: Props) {
         </div>
 
         {/* 3. Graduate stories */}
-        <div className="mb-16">
-          <h3 className="mb-3 text-2xl font-black text-foreground">
+        <div className="mb-16 text-center">
+          <h3 className="mb-3 text-2xl font-black uppercase text-accent">
             {isVi ? "Câu chuyện học viên sau tốt nghiệp" : "Graduate stories"}
           </h3>
-          <p className="mb-6 max-w-2xl leading-7 text-muted-foreground">
+          <p className="mx-auto mb-6 max-w-2xl leading-7 text-muted-foreground">
             {isVi
               ? "Những chia sẻ thực tế từ học viên đã tốt nghiệp và đang làm nghề PT tại các phòng tập trên cả nước."
               : "Real stories from graduates who are now working as personal trainers at gyms across the country."}
@@ -117,7 +117,7 @@ export function GraduateOutcomes({ locale }: Props) {
         {/* 4. Lifetime warranty */}
         <div className="grid gap-8 rounded-xl bg-primary p-6 text-primary-foreground sm:p-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
           <div>
-            <h3 className="text-2xl font-black text-white">
+            <h3 className="text-2xl font-black uppercase text-white">
               {isVi
                 ? "Bảo hành kiến thức trọn đời, học lại không tốn phí"
                 : "Lifetime knowledge warranty, free re-enrollment"}

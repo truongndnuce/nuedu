@@ -19,7 +19,7 @@ export function Header() {
     { href: `/${locale}/news`, label: t("news") },
     { href: `/${locale}/trainers`, label: t("trainers") },
     { href: `/${locale}/about`, label: t("about") },
-    { href: `/${locale}/contact`, label: t("contact") },
+    { href: `/${locale}/contact`, label: t("contact"), emphasis: true },
   ];
 
   function switchLocale(newLocale: string) {
@@ -50,7 +50,11 @@ export function Header() {
             <Link
               key={link.href}
               href={link.href}
-              className="rounded-md px-3 py-2 text-sm font-medium text-foreground/80 hover:text-foreground hover:bg-muted transition-colors"
+              className={
+                link.emphasis
+                  ? "rounded-md px-3 py-2 text-sm font-bold uppercase text-accent hover:text-accent/80 transition-colors"
+                  : "rounded-md px-3 py-2 text-sm font-medium text-foreground/80 hover:text-foreground hover:bg-muted transition-colors"
+              }
             >
               {link.label}
             </Link>
@@ -84,7 +88,11 @@ export function Header() {
             <Link
               key={link.href}
               href={link.href}
-              className="block rounded-md px-3 py-2 text-sm font-medium text-foreground/80 hover:text-foreground hover:bg-muted"
+              className={
+                link.emphasis
+                  ? "block rounded-md px-3 py-2 text-sm font-bold uppercase text-accent"
+                  : "block rounded-md px-3 py-2 text-sm font-medium text-foreground/80 hover:text-foreground hover:bg-muted"
+              }
               onClick={() => setMobileOpen(false)}
             >
               {link.label}

@@ -18,7 +18,7 @@ export function Hero() {
         sizes="100vw"
         className="object-cover"
       />
-      <div className="absolute inset-0 bg-[linear-gradient(90deg,oklch(0.125_0.033_155/0.95)_0%,oklch(0.125_0.033_155/0.76)_42%,oklch(0.125_0.033_155/0.26)_100%)]" />
+      <div className="absolute inset-0 bg-[linear-gradient(90deg,oklch(0.125_0.033_155/0.95)_0%,oklch(0.125_0.033_155/0.82)_30%,oklch(0.125_0.033_155/0.12)_55%,oklch(0.125_0.033_155/0.04)_100%)]" />
       <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-background to-transparent" />
 
       <div className="relative mx-auto grid min-h-[calc(100dvh-4rem)] max-w-7xl items-center gap-10 px-4 py-16 sm:px-6 lg:grid-cols-[1.05fr_0.95fr] lg:py-20">
@@ -36,7 +36,7 @@ export function Hero() {
           <div className="mt-9 flex flex-wrap items-center gap-4">
             <Link
               href={`/${locale}/contact`}
-              className="inline-flex min-h-12 items-center gap-2 rounded-lg bg-accent px-6 py-3 text-sm font-bold text-accent-foreground shadow-[0_18px_48px_oklch(0.876_0.233_122/0.22)] transition-transform hover:-translate-y-0.5 hover:bg-accent/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+              className="inline-flex min-h-12 items-center gap-2 rounded-lg bg-accent px-6 py-3 text-sm font-bold text-accent-foreground shadow-[0_18px_48px_oklch(0.518_0.114_160.7/0.28)] transition-transform hover:-translate-y-0.5 hover:bg-accent/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
             >
               {t("heroCtaPrimary")}
               <ArrowRight size={17} aria-hidden="true" />
@@ -67,31 +67,11 @@ export function Hero() {
           </div>
         </div>
 
-        <div className="hidden lg:grid grid-cols-2 gap-4">
-          <div className="relative mt-14 aspect-[4/5] overflow-hidden rounded-lg border border-white/12 bg-white/10">
-            <Image
-              src="/images/gym/gym-training.jpg"
-              alt="Coach guiding a gym training session"
-              fill
-              sizes="(min-width: 1024px) 280px, 0px"
-              className="object-cover"
-            />
-          </div>
-          <div className="space-y-4">
-            <div className="relative aspect-[5/4] overflow-hidden rounded-lg border border-white/12 bg-white/10">
-              <Image
-                src="/images/gym/gym-dumbbells.jpg"
-                alt="Rows of dumbbells in the NUEDU gym"
-                fill
-                sizes="(min-width: 1024px) 280px, 0px"
-                className="object-cover"
-              />
-            </div>
-            <div className="rounded-lg border border-accent/40 bg-accent p-5 text-accent-foreground">
-              <div className="text-4xl font-black leading-none">HIIT</div>
-              <div className="mt-2 text-sm font-semibold">
-                {locale === "vi" ? "Sức mạnh, cardio, phục hồi" : "Strength, cardio, recovery"}
-              </div>
+        <div className="hidden lg:flex">
+          <div className="rounded-lg border border-accent/40 bg-accent p-5 text-accent-foreground">
+            <div className="text-4xl font-black leading-none">HIIT</div>
+            <div className="mt-2 text-sm font-semibold">
+              {locale === "vi" ? "Sức mạnh, cardio, phục hồi" : "Strength, cardio, recovery"}
             </div>
           </div>
         </div>
