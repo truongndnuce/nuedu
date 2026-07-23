@@ -283,7 +283,7 @@ export default async function HomePage() {
           </Reveal>
           <Reveal delay={120} className="rounded-lg border border-white/12 bg-white/10 p-6">
             <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-accent text-accent-foreground">
+              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-white text-primary">
                 <Target size={24} aria-hidden="true" />
               </div>
               <div>
@@ -293,7 +293,7 @@ export default async function HomePage() {
             </div>
             <Link
               href={`/${locale}/about`}
-              className="mt-6 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-lg bg-accent px-5 text-sm font-black text-accent-foreground transition-all hover:-translate-y-0.5 hover:bg-accent/90"
+              className="mt-6 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-lg bg-white px-5 text-sm font-black text-primary transition-all hover:-translate-y-0.5 hover:bg-white/90"
             >
               {locale === "vi" ? "Đăng ký tư vấn khóa học" : "Request program consultation"}
               <Trophy size={18} aria-hidden="true" />
