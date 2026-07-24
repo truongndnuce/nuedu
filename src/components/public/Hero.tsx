@@ -32,7 +32,7 @@ export function Hero() {
             className="animate-fade-in-up text-4xl font-black uppercase leading-[0.98] text-white sm:text-5xl lg:text-6xl"
             style={{ animationDelay: "0.1s" }}
           >
-            {t("heroTitle")}
+            {t.rich("heroTitle", { br: () => <br /> })}
           </h1>
           <p
             className="mt-6 max-w-2xl animate-fade-in-up text-lg leading-8 text-white/82 sm:text-xl"
