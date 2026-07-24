@@ -29,7 +29,7 @@ export function Hero() {
             {locale === "vi" ? "Học viện đào tạo nghề PT Gym" : "PT Gym career academy"}
           </div>
           <h1
-            className="animate-fade-in-up text-5xl font-black uppercase leading-[0.98] text-white sm:text-7xl lg:text-8xl"
+            className="animate-fade-in-up text-4xl font-black uppercase leading-[0.98] text-white sm:text-5xl lg:text-6xl"
             style={{ animationDelay: "0.1s" }}
           >
             {t("heroTitle")}

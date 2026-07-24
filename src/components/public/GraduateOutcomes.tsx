@@ -26,7 +26,7 @@ export function GraduateOutcomes({ locale }: Props) {
 
   return (
     <section className="bg-background py-16 sm:py-20">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6">
+      <div className="mx-auto max-w-[1600px] px-4 sm:px-6">
         <Reveal className="mb-14 text-center">
           <p className="text-sm font-bold uppercase text-primary">
             {isVi ? "Cam kết đầu ra" : "Outcome commitment"}
@@ -71,18 +71,18 @@ export function GraduateOutcomes({ locale }: Props) {
                 : "NUEDU partners with a nationwide network of gyms and fitness chains, ready to hire graduates right after the program."}
             </p>
           </Reveal>
-          <div className="flex flex-wrap justify-center gap-4">
+          <div className="mx-[calc(50%-50vw)] flex w-screen flex-wrap justify-center gap-2 px-2 sm:gap-3 sm:px-3">
             {partners.map((src, index) => (
               <Reveal
                 key={src}
                 delay={index * 80}
-                className="group relative aspect-[3/2] w-full max-w-xs overflow-hidden rounded-lg border border-border bg-muted sm:w-[calc(50%-0.5rem)] lg:w-[calc(33.333%-0.75rem)]"
+                className="group relative aspect-square w-full overflow-hidden rounded-lg border border-border bg-muted sm:w-[calc(50%-0.375rem)] lg:w-[calc(33.333%-0.5rem)]"
               >
                 <Image
                   src={src}
                   alt={`${isVi ? "Đối tác tuyển dụng" : "Recruitment partner"} ${index + 1}`}
                   fill
-                  sizes="(min-width: 1024px) 30vw, (min-width: 640px) 45vw, 90vw"
+                  sizes="(min-width: 1024px) 34vw, (min-width: 640px) 50vw, 100vw"
                   className="object-cover transition-transform duration-300 group-hover:scale-105"
                 />
               </Reveal>
