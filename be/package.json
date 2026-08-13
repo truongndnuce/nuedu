@@ -54,7 +54,10 @@
       "@prisma/client",
       "@prisma/engines",
       "prisma"
-    ]
+    ],
+    "overrides": {
+      "fastify": "5.11.0"
+    }
   },
   "devDependencies": {
     "@nestjs/cli": "^11.0.0",
