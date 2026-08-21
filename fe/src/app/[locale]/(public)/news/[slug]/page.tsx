@@ -7,6 +7,12 @@ import { vi as viLocale, enUS } from "date-fns/locale";
 import { getPublicPostBySlug, getPublicPosts } from "@/lib/api/public.api";
 import { buildPostMetadata } from "@/lib/seo";
 
+// Posts published after the last build aren't in generateStaticParams; without
+// this, Next's static-trial render for those params hits the root layout's
+// getLocale() -> headers() call and throws DYNAMIC_SERVER_USAGE instead of
+// falling back to SSR.
+export const dynamic = "force-dynamic";
+
 export async function generateMetadata({
   params,
 }: {
