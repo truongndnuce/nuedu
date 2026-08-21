@@ -17,9 +17,11 @@ FROM deps AS build
 COPY . .
 # NEXT_PUBLIC_* vars are inlined into the client bundle at build time, so they
 # must be supplied as Docker build args in Dokploy, not just runtime env vars.
-ARG NEXT_PUBLIC_API_URL
-ARG NEXT_PUBLIC_SITE_URL
-ARG NEXT_PUBLIC_DEFAULT_LOCALE
+# Defaults below match production so a build still comes out correct even if
+# Dokploy's Build Args aren't configured.
+ARG NEXT_PUBLIC_API_URL=https://apinuedu.xyz/api/v1
+ARG NEXT_PUBLIC_SITE_URL=https://nuedu.xyz
+ARG NEXT_PUBLIC_DEFAULT_LOCALE=vi
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL \
     NEXT_PUBLIC_SITE_URL=$NEXT_PUBLIC_SITE_URL \
     NEXT_PUBLIC_DEFAULT_LOCALE=$NEXT_PUBLIC_DEFAULT_LOCALE
