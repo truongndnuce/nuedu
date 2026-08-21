@@ -1,3 +1,4 @@
+import path from "node:path";
 import type { NextConfig } from "next";
 import createNextIntlPlugin from "next-intl/plugin";
 
@@ -15,6 +16,18 @@ const BACKEND_URL =
   "http://localhost:4000/api/v1";
 
 const nextConfig: NextConfig = {
+  // Standalone output keeps the runtime image to only the files actually
+  // needed to run `node server.js` (no full node_modules copy), so deploy
+  // image push/pull stays fast regardless of how big devDependencies get.
+  output: "standalone",
+  // Without this, Next.js infers the workspace root by walking up for the
+  // nearest lockfile and can lock onto an unrelated one outside this repo
+  // (e.g. a stray package-lock.json in a parent directory), which throws off
+  // where `output: standalone` places server.js. Pinning it keeps output
+  // structure identical across machines, CI, and the Docker build context.
+  turbopack: {
+    root: path.join(__dirname),
+  },
   async rewrites() {
     return {
       beforeFiles: [
