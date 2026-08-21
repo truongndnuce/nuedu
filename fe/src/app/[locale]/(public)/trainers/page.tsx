@@ -5,7 +5,7 @@ import type { ApiTrainer } from "@/lib/api/trainers.api";
 import { buildPageMetadata } from "@/lib/seo";
 
 const API_BASE =
-  process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000/api/v1";
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api/v1";
 
 export async function generateMetadata({
   params,

@@ -4,7 +4,7 @@ import { getLocale } from "next-intl/server";
 import { OrganizationJsonLd } from "@/components/seo/OrganizationJsonLd";
 import "./globals.css";
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 
 const hankenGrotesk = Hanken_Grotesk({
   variable: "--font-sans",

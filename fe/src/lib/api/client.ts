@@ -4,7 +4,7 @@ import { useAuthStore } from "@/lib/auth/authStore";
 import { refreshSessionOnce } from "@/lib/auth/useAuth";
 
 const API_BASE =
-  process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000/api/v1";
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api/v1";
 
 export class ApiError extends Error {
   constructor(public readonly status: number, message: string) {

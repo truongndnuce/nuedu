@@ -5,7 +5,7 @@ import { useLocale } from "next-intl";
 import { useAuthStore, type AuthUser } from "./authStore";
 import { hasPermission } from "@/lib/permissions";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000/api/v1";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api/v1";
 
 // 7 ngày — khớp với refresh token TTL, dùng để middleware server-side check
 const SESSION_COOKIE_MAX_AGE = 7 * 24 * 60 * 60;

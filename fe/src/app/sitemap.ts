@@ -2,7 +2,7 @@ import type { MetadataRoute } from "next";
 import { routing } from "@/lib/i18n/routing";
 import { getPublicPosts } from "@/lib/api/public.api";
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 
 const staticPaths = ["", "/news", "/trainers", "/about", "/contact"];
 
