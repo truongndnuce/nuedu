@@ -6,6 +6,7 @@ import { format } from "date-fns";
 import { vi as viLocale, enUS } from "date-fns/locale";
 import { getPublicPostBySlug, getPublicPosts } from "@/lib/api/public.api";
 import { buildPostMetadata } from "@/lib/seo";
+import { PostFooter } from "@/components/public/PostFooter";
 
 // Posts published after the last build aren't in generateStaticParams; without
 // this, Next's static-trial render for those params hits the root layout's
@@ -123,6 +124,9 @@ export default async function PostDetailPage({
             className="tiptap-content mt-10"
             dangerouslySetInnerHTML={{ __html: content ?? "" }}
           />
+
+          {/* Fixed footer shown on every post */}
+          <PostFooter />
         </div>
       </article>
     </>

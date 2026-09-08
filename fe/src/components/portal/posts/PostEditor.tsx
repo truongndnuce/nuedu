@@ -10,6 +10,8 @@ import Image from "@tiptap/extension-image";
 import Placeholder from "@tiptap/extension-placeholder";
 import { TextStyle } from "@tiptap/extension-text-style";
 import FontFamily from "@tiptap/extension-font-family";
+import TextAlign from "@tiptap/extension-text-align";
+import { Color } from "@tiptap/extension-color";
 import {
   Bold,
   Italic,
@@ -23,6 +25,10 @@ import {
   Heading2,
   Heading3,
   Loader2,
+  AlignLeft,
+  AlignCenter,
+  AlignRight,
+  AlignJustify,
 } from "lucide-react";
 import { uploadFile } from "@/lib/api/uploadLocal";
 import { cn } from "@/lib/utils";
@@ -115,6 +121,8 @@ export function PostEditor({ content, onChange, placeholder }: PostEditorProps) 
       TextStyle,
       FontFamily,
       FontSize,
+      TextAlign.configure({ types: ["paragraph", "heading"] }),
+      Color,
     ],
     content,
     onUpdate: ({ editor }) => {
@@ -165,6 +173,30 @@ export function PostEditor({ content, onChange, placeholder }: PostEditorProps) 
       title: "Heading 3",
       action: () => editor.chain().focus().toggleHeading({ level: 3 }).run(),
       active: () => editor.isActive("heading", { level: 3 }),
+    },
+    {
+      icon: AlignLeft,
+      title: "Căn trái",
+      action: () => editor.chain().focus().setTextAlign("left").run(),
+      active: () => editor.isActive({ textAlign: "left" }),
+    },
+    {
+      icon: AlignCenter,
+      title: "Căn giữa",
+      action: () => editor.chain().focus().setTextAlign("center").run(),
+      active: () => editor.isActive({ textAlign: "center" }),
+    },
+    {
+      icon: AlignRight,
+      title: "Căn phải",
+      action: () => editor.chain().focus().setTextAlign("right").run(),
+      active: () => editor.isActive({ textAlign: "right" }),
+    },
+    {
+      icon: AlignJustify,
+      title: "Căn đều hai bên",
+      action: () => editor.chain().focus().setTextAlign("justify").run(),
+      active: () => editor.isActive({ textAlign: "justify" }),
     },
     {
       icon: List,
@@ -244,6 +276,13 @@ export function PostEditor({ content, onChange, placeholder }: PostEditorProps) 
             </option>
           ))}
         </select>
+        <input
+          type="color"
+          title="Màu chữ"
+          value={editor.getAttributes("textStyle").color || "#000000"}
+          onChange={(e) => editor.chain().focus().setColor(e.target.value).run()}
+          className="h-7 w-7 cursor-pointer rounded border border-transparent bg-transparent p-0.5 hover:bg-muted"
+        />
         <div className="mx-1 h-4 w-px bg-border" />
         {tools.map(({ icon: Icon, title, action, active }) => (
           <button
