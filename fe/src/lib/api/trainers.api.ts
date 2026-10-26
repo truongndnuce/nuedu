@@ -5,20 +5,33 @@ const API_BASE =
 
 export interface ApiTrainer {
   id: string;
+  slug: string | null;
   nameVi: string;
-  nameEn: string;
   titleVi: string;
-  titleEn: string;
   bioVi: string;
-  bioEn: string;
+  headlineVi: string | null;
+  contentVi: string | null;
+  facebookUrl: string | null;
   avatar: string;
   specialties: string[];
   order: number;
   isActive: boolean;
 }
 
-export type CreateTrainerPayload = Omit<ApiTrainer, "id" | "isActive"> & {
+export type CreateTrainerPayload = Omit<
+  ApiTrainer,
+  | "id"
+  | "isActive"
+  | "slug"
+  | "headlineVi"
+  | "contentVi"
+  | "facebookUrl"
+> & {
   isActive?: boolean;
+  slug?: string;
+  headlineVi?: string;
+  contentVi?: string;
+  facebookUrl?: string;
 };
 
 export type UpdateTrainerPayload = Partial<CreateTrainerPayload>;
@@ -27,6 +40,25 @@ export async function listTrainers(): Promise<ApiTrainer[]> {
   const res = await fetch(`${API_BASE}/trainers`);
   if (!res.ok) throw new Error("Failed to fetch trainers");
   return res.json();
+}
+
+export async function getTrainerBySlug(
+  slug: string,
+): Promise<ApiTrainer | null> {
+  try {
+    const res = await fetch(
+      `${API_BASE}/trainers/${encodeURIComponent(slug)}`,
+      { next: { revalidate: 60 } },
+    );
+    if (!res.ok) return null;
+    return res.json();
+  } catch {
+    return null;
+  }
+}
+
+export function trainerPath(locale: string, trainer: Pick<ApiTrainer, "id" | "slug">) {
+  return `/${locale}/trainers/${trainer.slug ?? trainer.id}`;
 }
 
 export function adminListTrainers(): Promise<ApiTrainer[]> {

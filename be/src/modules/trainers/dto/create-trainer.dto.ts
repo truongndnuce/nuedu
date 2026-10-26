@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsArray, IsBoolean, IsInt, IsOptional, IsString, MinLength } from 'class-validator';
+import { IsArray, IsBoolean, IsInt, IsOptional, IsString, IsUrl, MinLength, ValidateIf } from 'class-validator';
 
 export class CreateTrainerDto {
   @ApiProperty()
@@ -10,27 +10,32 @@ export class CreateTrainerDto {
   @ApiProperty()
   @IsString()
   @MinLength(1)
-  nameEn: string;
-
-  @ApiProperty()
-  @IsString()
-  @MinLength(1)
   titleVi: string;
-
-  @ApiProperty()
-  @IsString()
-  @MinLength(1)
-  titleEn: string;
 
   @ApiProperty()
   @IsString()
   @MinLength(1)
   bioVi: string;
 
-  @ApiProperty()
+  @ApiPropertyOptional({ description: 'URL slug; generated from nameVi when omitted' })
   @IsString()
-  @MinLength(1)
-  bioEn: string;
+  @IsOptional()
+  slug?: string;
+
+  @ApiPropertyOptional()
+  @IsString()
+  @IsOptional()
+  headlineVi?: string;
+
+  @ApiPropertyOptional({ description: 'Detail page HTML' })
+  @IsString()
+  @IsOptional()
+  contentVi?: string;
+
+  @ApiPropertyOptional()
+  @ValidateIf((o) => !!o.facebookUrl)
+  @IsUrl()
+  facebookUrl?: string;
 
   @ApiProperty()
   @IsString()

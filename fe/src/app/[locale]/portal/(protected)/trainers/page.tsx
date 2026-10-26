@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Pencil, Trash2, Plus, X } from "lucide-react";
 import { PermissionGate } from "@/components/portal/PermissionGate";
 import { AvatarPicker } from "@/components/portal/media/AvatarPicker";
+import { PostEditor } from "@/components/portal/posts/PostEditor";
 import {
   adminListTrainers,
   createTrainer,
@@ -15,11 +16,12 @@ import {
 
 const emptyForm: CreateTrainerPayload = {
   nameVi: "",
-  nameEn: "",
   titleVi: "",
-  titleEn: "",
   bioVi: "",
-  bioEn: "",
+  slug: "",
+  headlineVi: "",
+  contentVi: "",
+  facebookUrl: "",
   avatar: "",
   specialties: [],
   order: 0,
@@ -55,11 +57,12 @@ export default function TrainersPortalPage() {
     setEditingId(trainer.id);
     setForm({
       nameVi: trainer.nameVi,
-      nameEn: trainer.nameEn,
       titleVi: trainer.titleVi,
-      titleEn: trainer.titleEn,
       bioVi: trainer.bioVi,
-      bioEn: trainer.bioEn,
+      slug: trainer.slug ?? "",
+      headlineVi: trainer.headlineVi ?? "",
+      contentVi: trainer.contentVi ?? "",
+      facebookUrl: trainer.facebookUrl ?? "",
       avatar: trainer.avatar,
       specialties: trainer.specialties,
       order: trainer.order,
@@ -165,7 +168,7 @@ export default function TrainersPortalPage() {
                 #
               </th>
               <th className="px-4 py-3 text-left font-medium text-muted-foreground">
-                Tên (VI / EN)
+                Tên
               </th>
               <th className="px-4 py-3 text-left font-medium text-muted-foreground">
                 Chức danh
@@ -189,15 +192,9 @@ export default function TrainersPortalPage() {
                   <div className="font-medium text-foreground">
                     {trainer.nameVi}
                   </div>
-                  <div className="text-xs text-muted-foreground">
-                    {trainer.nameEn}
-                  </div>
                 </td>
                 <td className="px-4 py-3">
                   <div className="text-foreground">{trainer.titleVi}</div>
-                  <div className="text-xs text-muted-foreground">
-                    {trainer.titleEn}
-                  </div>
                 </td>
                 <td className="px-4 py-3">
                   <span
@@ -249,7 +246,7 @@ export default function TrainersPortalPage() {
       {/* Modal */}
       {modalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-2xl rounded-xl bg-background border border-border shadow-2xl max-h-[90vh] overflow-y-auto">
+          <div className="w-full max-w-4xl rounded-xl bg-background border border-border shadow-2xl max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between px-6 py-4 border-b border-border">
               <h2 className="text-lg font-semibold text-foreground">
                 {editingId ? "Sửa giảng viên" : "Thêm giảng viên mới"}
@@ -264,77 +261,40 @@ export default function TrainersPortalPage() {
 
             <div className="px-6 py-5 space-y-4">
               {/* Name */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-medium text-muted-foreground mb-1">
-                    Tên (Tiếng Việt) *
-                  </label>
-                  <input
-                    value={form.nameVi}
-                    onChange={(e) => setField("nameVi", e.target.value)}
-                    className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-muted-foreground mb-1">
-                    Name (English) *
-                  </label>
-                  <input
-                    value={form.nameEn}
-                    onChange={(e) => setField("nameEn", e.target.value)}
-                    className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
-                  />
-                </div>
+              <div>
+                <label className="block text-xs font-medium text-muted-foreground mb-1">
+                  Tên giảng viên *
+                </label>
+                <input
+                  value={form.nameVi}
+                  onChange={(e) => setField("nameVi", e.target.value)}
+                  className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+                />
               </div>
 
               {/* Title */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-medium text-muted-foreground mb-1">
-                    Chức danh (VI) *
-                  </label>
-                  <input
-                    value={form.titleVi}
-                    onChange={(e) => setField("titleVi", e.target.value)}
-                    className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-muted-foreground mb-1">
-                    Title (EN) *
-                  </label>
-                  <input
-                    value={form.titleEn}
-                    onChange={(e) => setField("titleEn", e.target.value)}
-                    className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
-                  />
-                </div>
+              <div>
+                <label className="block text-xs font-medium text-muted-foreground mb-1">
+                  Chức danh *
+                </label>
+                <input
+                  value={form.titleVi}
+                  onChange={(e) => setField("titleVi", e.target.value)}
+                  className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+                />
               </div>
 
               {/* Bio */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-medium text-muted-foreground mb-1">
-                    Bio (VI) *
-                  </label>
-                  <textarea
-                    rows={3}
-                    value={form.bioVi}
-                    onChange={(e) => setField("bioVi", e.target.value)}
-                    className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring resize-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-muted-foreground mb-1">
-                    Bio (EN) *
-                  </label>
-                  <textarea
-                    rows={3}
-                    value={form.bioEn}
-                    onChange={(e) => setField("bioEn", e.target.value)}
-                    className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring resize-none"
-                  />
-                </div>
+              <div>
+                <label className="block text-xs font-medium text-muted-foreground mb-1">
+                  Giới thiệu ngắn *
+                </label>
+                <textarea
+                  rows={3}
+                  value={form.bioVi}
+                  onChange={(e) => setField("bioVi", e.target.value)}
+                  className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring resize-none"
+                />
               </div>
 
               {/* Avatar */}
@@ -360,6 +320,64 @@ export default function TrainersPortalPage() {
                   className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
                 />
               </div>
+
+              {/* Detail page */}
+              <div className="border-t border-border pt-4">
+                <h3 className="text-sm font-semibold text-foreground">
+                  Trang chi tiết giảng viên
+                </h3>
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-muted-foreground mb-1">
+                  Tiêu đề trang
+                </label>
+                <input
+                  value={form.headlineVi}
+                  onChange={(e) => setField("headlineVi", e.target.value)}
+                  placeholder="Lý Đức - Lực sĩ vàng của làng Gymer"
+                  className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-medium text-muted-foreground mb-1">
+                    Slug (để trống sẽ tự tạo từ tên)
+                  </label>
+                  <input
+                    value={form.slug}
+                    onChange={(e) => setField("slug", e.target.value)}
+                    placeholder="ly-duc"
+                    className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-muted-foreground mb-1">
+                    Fanpage chính thức
+                  </label>
+                  <input
+                    type="url"
+                    value={form.facebookUrl}
+                    onChange={(e) => setField("facebookUrl", e.target.value)}
+                    placeholder="https://www.facebook.com/..."
+                    className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-muted-foreground mb-1">
+                  Nội dung chi tiết
+                </label>
+                <PostEditor
+                  key={editingId ?? "new"}
+                  content={form.contentVi ?? ""}
+                  onChange={(html) => setField("contentVi", html)}
+                  placeholder="Giới thiệu, thành tích, kinh nghiệm..."
+                />
+              </div>
+
 
               {/* Order + isActive */}
               <div className="grid grid-cols-2 gap-4">

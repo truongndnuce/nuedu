@@ -7,6 +7,13 @@ import { useRouter, usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Menu, X, ChevronDown } from "lucide-react";
 import { getPublicCategories, type PublicCategory } from "@/lib/api/public.api";
+import { listTrainers, trainerPath, type ApiTrainer } from "@/lib/api/trainers.api";
+
+interface DropdownItem {
+  key: string;
+  href: string;
+  label: string;
+}
 
 export function Header() {
   const t = useTranslations("nav");
@@ -15,17 +22,37 @@ export function Header() {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [categories, setCategories] = useState<PublicCategory[]>([]);
+  const [trainers, setTrainers] = useState<ApiTrainer[]>([]);
 
   useEffect(() => {
     getPublicCategories()
       .then(setCategories)
       .catch(() => setCategories([]));
+    listTrainers()
+      .then(setTrainers)
+      .catch(() => setTrainers([]));
   }, []);
 
-  const navLinks = [
+  const categoryItems: DropdownItem[] = categories.map((category) => ({
+    key: category.id,
+    href: `/${locale}/news/category/${category.slug}`,
+    label: locale === "vi" ? category.nameVi : category.nameEn,
+  }));
+  const trainerItems: DropdownItem[] = trainers.map((trainer) => ({
+    key: trainer.id,
+    href: trainerPath(locale, trainer),
+    label: trainer.nameVi,
+  }));
+
+  const navLinks: {
+    href: string;
+    label: string;
+    dropdown?: DropdownItem[];
+    emphasis?: boolean;
+  }[] = [
     { href: `/${locale}`, label: t("home") },
-    { href: `/${locale}/news`, label: t("news"), dropdown: true },
-    { href: `/${locale}/trainers`, label: t("trainers") },
+    { href: `/${locale}/news`, label: t("news"), dropdown: categoryItems },
+    { href: `/${locale}/trainers`, label: t("trainers"), dropdown: trainerItems },
     { href: `/${locale}/about`, label: t("about") },
     { href: `/${locale}/contact`, label: t("contact"), emphasis: true },
   ];
@@ -55,7 +82,7 @@ export function Header() {
         {/* Desktop nav */}
         <nav className="hidden md:flex items-center gap-1">
           {navLinks.map((link) =>
-            link.dropdown && categories.length > 0 ? (
+            link.dropdown && link.dropdown.length > 0 ? (
               <div key={link.href} className="group relative">
                 <Link
                   href={link.href}
@@ -65,13 +92,14 @@ export function Header() {
                   <ChevronDown size={14} />
                 </Link>
                 <div className="invisible absolute left-0 top-full z-50 min-w-[220px] rounded-md border border-border bg-background py-1 opacity-0 shadow-lg transition-opacity group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100">
-                  {categories.map((category) => (
+                  {link.dropdown.map((item) => (
                     <Link
-                      key={category.id}
-                      href={`/${locale}/news/category/${category.slug}`}
+                      key={item.key}
+                      href={item.href}
                       className="block px-4 py-2 text-sm text-foreground/80 hover:bg-muted hover:text-foreground"
                     >
-                      {locale === "vi" ? category.nameVi : category.nameEn}
+                      <span className="mr-2 text-primary">»</span>
+                      {item.label}
                     </Link>
                   ))}
                   <div className="my-1 border-t border-border" />
@@ -135,16 +163,16 @@ export function Header() {
               >
                 {link.label}
               </Link>
-              {link.dropdown && categories.length > 0 && (
+              {link.dropdown && link.dropdown.length > 0 && (
                 <div className="ml-3 space-y-1 border-l border-border pl-3">
-                  {categories.map((category) => (
+                  {link.dropdown.map((item) => (
                     <Link
-                      key={category.id}
-                      href={`/${locale}/news/category/${category.slug}`}
+                      key={item.key}
+                      href={item.href}
                       className="block rounded-md px-3 py-1.5 text-sm text-foreground/70 hover:text-foreground hover:bg-muted"
                       onClick={() => setMobileOpen(false)}
                     >
-                      {locale === "vi" ? category.nameVi : category.nameEn}
+                      {item.label}
                     </Link>
                   ))}
                 </div>

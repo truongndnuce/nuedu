@@ -297,12 +297,18 @@ model Message {
 
 model Trainer {
   id          String   @id @default(uuid())
+  slug        String?  @unique
   nameVi      String
   nameEn      String
   titleVi     String
   titleEn     String
   bioVi       String   @db.Text
   bioEn       String   @db.Text
+  headlineVi  String?
+  headlineEn  String?
+  contentVi   String?  @db.LongText
+  contentEn   String?  @db.LongText
+  facebookUrl String?
   avatar      String
   specialties Json
   order       Int      @default(0)

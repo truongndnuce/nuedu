@@ -26,6 +26,13 @@ export class TrainersController {
     return this.service.findAllAdmin();
   }
 
+  @Get(':slug')
+  @Public()
+  @ApiOperation({ summary: 'Get active trainer by slug or id (public)' })
+  findBySlug(@Param('slug') slug: string) {
+    return this.service.findBySlug(slug);
+  }
+
   @Post()
   @ApiBearerAuth()
   @Permissions('trainers.manage')
