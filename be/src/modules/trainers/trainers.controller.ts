@@ -20,7 +20,7 @@ export class TrainersController {
 
   @Get('admin')
   @ApiBearerAuth()
-  @Permissions('trainers.view', 'trainers.manage')
+  @Permissions('trainers.view')
   @ApiOperation({ summary: 'List all trainers including inactive (admin)' })
   findAllAdmin() {
     return this.service.findAllAdmin();
@@ -35,7 +35,7 @@ export class TrainersController {
 
   @Post()
   @ApiBearerAuth()
-  @Permissions('trainers.manage')
+  @Permissions('trainers.view')
   @ApiOperation({ summary: 'Create trainer' })
   create(@Body() dto: CreateTrainerDto) {
     return this.service.create(dto);
@@ -43,7 +43,7 @@ export class TrainersController {
 
   @Patch(':id')
   @ApiBearerAuth()
-  @Permissions('trainers.manage')
+  @Permissions('trainers.view')
   @ApiOperation({ summary: 'Update trainer' })
   update(@Param('id') id: string, @Body() dto: UpdateTrainerDto) {
     return this.service.update(id, dto);
@@ -51,7 +51,7 @@ export class TrainersController {
 
   @Delete(':id')
   @ApiBearerAuth()
-  @Permissions('trainers.manage')
+  @Permissions('trainers.view')
   @HttpCode(204)
   @ApiOperation({ summary: 'Delete trainer' })
   remove(@Param('id') id: string) {

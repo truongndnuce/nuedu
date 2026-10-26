@@ -130,7 +130,7 @@ export default function TrainersPortalPage() {
 
   return (
     <PermissionGate
-      needAny={["trainers.view", "trainers.manage"]}
+      need="trainers.view"
       fallback={
         <div className="rounded-lg bg-muted px-4 py-3 text-sm text-muted-foreground">
           Bạn không có quyền truy cập trang này.
@@ -149,15 +149,13 @@ export default function TrainersPortalPage() {
 
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-foreground">Giảng viên</h1>
-        <PermissionGate need="trainers.manage">
-          <button
-            onClick={openCreate}
-            className="flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
-          >
-            <Plus size={15} />
-            Thêm giảng viên
-          </button>
-        </PermissionGate>
+        <button
+          onClick={openCreate}
+          className="flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
+        >
+          <Plus size={15} />
+          Thêm giảng viên
+        </button>
       </div>
 
       <div className="rounded-xl border border-border overflow-hidden">
@@ -208,24 +206,22 @@ export default function TrainersPortalPage() {
                   </span>
                 </td>
                 <td className="px-4 py-3">
-                  <PermissionGate need="trainers.manage">
-                    <div className="flex gap-1 justify-end">
-                      <button
-                        onClick={() => openEdit(trainer)}
-                        className="rounded p-1 text-muted-foreground hover:text-primary hover:bg-muted"
-                        title="Sửa"
-                      >
-                        <Pencil size={14} />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(trainer.id)}
-                        className="rounded p-1 text-muted-foreground hover:text-destructive hover:bg-muted"
-                        title="Xóa"
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                    </div>
-                  </PermissionGate>
+                  <div className="flex gap-1 justify-end">
+                    <button
+                      onClick={() => openEdit(trainer)}
+                      className="rounded p-1 text-muted-foreground hover:text-primary hover:bg-muted"
+                      title="Sửa"
+                    >
+                      <Pencil size={14} />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(trainer.id)}
+                      className="rounded p-1 text-muted-foreground hover:text-destructive hover:bg-muted"
+                      title="Xóa"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}

@@ -16,7 +16,6 @@ export async function generateMetadata({
   const { locale, slug } = await params;
   const trainer = await getTrainerBySlug(slug);
   if (!trainer) return { title: "Not found" };
-  const isVi = locale === "vi";
   return buildPageMetadata({
     title: trainer.headlineVi || trainer.nameVi,
     description: trainer.bioVi,

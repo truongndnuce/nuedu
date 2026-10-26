@@ -305,9 +305,7 @@ model Trainer {
   bioVi       String   @db.Text
   bioEn       String   @db.Text
   headlineVi  String?
-  headlineEn  String?
   contentVi   String?  @db.LongText
-  contentEn   String?  @db.LongText
   facebookUrl String?
   avatar      String
   specialties Json

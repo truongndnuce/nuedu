@@ -139,7 +139,7 @@ export function Sidebar() {
         </PermissionGate>
 
         {/* Permission-gated: Trainers */}
-        <PermissionGate needAny={["trainers.view", "trainers.manage"]}>
+        <PermissionGate need="trainers.view">
           <Link
             href={`/${locale}/portal/trainers`}
             className={cn(

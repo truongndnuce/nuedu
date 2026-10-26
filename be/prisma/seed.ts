@@ -30,8 +30,7 @@ const PERMISSIONS = [
   { key: 'chat.assign', group: 'chat', description: 'Assign/reassign conversations' },
   { key: 'chat.close', group: 'chat', description: 'Close conversations' },
   // trainers
-  { key: 'trainers.view', group: 'trainers', description: 'View trainers (admin)' },
-  { key: 'trainers.manage', group: 'trainers', description: 'CRUD trainers' },
+  { key: 'trainers.view', group: 'trainers', description: 'View and manage trainers (admin)' },
   // testimonials
   { key: 'testimonials.view', group: 'testimonials', description: 'View testimonials (admin)' },
   { key: 'testimonials.manage', group: 'testimonials', description: 'CRUD testimonials' },
@@ -42,6 +41,7 @@ const PERMISSIONS = [
 // roles.manage / users.* / permissions.assign / settings.manage were removed —
 // those pages are now hard-gated to UserRole.ADMIN via @AdminOnly(), not
 // assignable per-role/per-user permissions.
+// trainers.manage was merged into trainers.view.
 const DEPRECATED_PERMISSION_KEYS = [
   'roles.manage',
   'users.create',
@@ -50,6 +50,7 @@ const DEPRECATED_PERMISSION_KEYS = [
   'users.delete',
   'permissions.assign',
   'settings.manage',
+  'trainers.manage',
 ];
 
 const STAFF_DEFAULT_PERMISSIONS = [
