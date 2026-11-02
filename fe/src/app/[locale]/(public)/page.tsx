@@ -4,6 +4,7 @@ import { Hero } from "@/components/public/Hero";
 import { Reveal } from "@/components/public/Reveal";
 import { CurriculumCard } from "@/components/public/CurriculumCard";
 import { GraduateOutcomes } from "@/components/public/GraduateOutcomes";
+import { CoursesSection } from "@/components/public/CoursesSection";
 import { TrainerCard } from "@/components/public/TrainerCard";
 import { TestimonialMarquee } from "@/components/public/TestimonialMarquee";
 import { LeadCapturePopup } from "@/components/public/LeadCapturePopup";
@@ -243,6 +244,7 @@ export default async function HomePage() {
               </Reveal>
             ))}
           </div>
+          <CoursesSection locale={locale} />
         </div>
       </section>
 
