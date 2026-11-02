@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { getTranslations, getLocale } from "next-intl/server";
 import { TrainerCard } from "@/components/public/TrainerCard";
+import { CoursesSection } from "@/components/public/CoursesSection";
 import type { ApiTrainer } from "@/lib/api/trainers.api";
 import { buildPageMetadata } from "@/lib/seo";
 
@@ -14,7 +15,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale } = await params;
   return buildPageMetadata({
-    title: locale === "vi" ? "Khóa học & giảng viên" : "Courses & trainers",
+    title: locale === "vi" ? "Giảng viên" : "Trainers",
     description:
       locale === "vi"
         ? "Đội ngũ giảng viên giàu kinh nghiệm trực tiếp giảng dạy tại NUEDU — học viện đào tạo nghề PT Gym."
@@ -51,6 +52,7 @@ export default async function TrainersPage() {
             <TrainerCard key={trainer.id} trainer={trainer} locale={locale} />
           ))}
         </div>
+        <CoursesSection locale={locale} />
       </div>
     </div>
   );
