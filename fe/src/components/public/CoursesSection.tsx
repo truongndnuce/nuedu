@@ -33,9 +33,9 @@ export function CoursesSection({ locale }: { locale: string }) {
   return (
     <section id="courses" className="mt-20 scroll-mt-24">
       <div className="mb-10 text-center">
-        <p className="text-sm font-bold uppercase tracking-widest text-primary">{c.eyebrow}</p>
-        <h2 className="mt-2 text-3xl font-extrabold text-foreground sm:text-4xl">{c.title}</h2>
-        <p className="mt-3 text-base text-muted-foreground sm:text-lg">{c.subtitle}</p>
+        <p className="text-base font-bold uppercase tracking-widest text-primary">{c.eyebrow}</p>
+        <h2 className="mt-2 text-4xl font-extrabold text-foreground sm:text-5xl">{c.title}</h2>
+        <p className="mt-3 text-lg text-muted-foreground sm:text-xl">{c.subtitle}</p>
       </div>
 
       <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
@@ -48,13 +48,13 @@ export function CoursesSection({ locale }: { locale: string }) {
 
       <div className="mt-8 flex flex-col items-start gap-4 rounded-2xl border border-border bg-primary/5 p-5 sm:flex-row sm:items-center sm:justify-between md:p-6">
         <div>
-          <h3 className="text-lg font-bold text-foreground">{c.ctaTitle}</h3>
-          <p className="mt-1 text-sm text-muted-foreground">{c.ctaText}</p>
+          <h3 className="text-xl font-bold text-foreground">{c.ctaTitle}</h3>
+          <p className="mt-1 text-base text-muted-foreground">{c.ctaText}</p>
         </div>
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="w-full shrink-0 rounded-lg bg-primary px-6 py-3 text-sm font-bold text-primary-foreground transition-all duration-300 hover:scale-105 hover:shadow-lg sm:w-auto motion-reduce:transform-none"
+          className="w-full shrink-0 rounded-lg bg-primary px-6 py-3.5 text-base font-bold text-primary-foreground transition-all duration-300 hover:scale-105 hover:shadow-lg sm:w-auto motion-reduce:transform-none"
         >
           {c.ctaButton}
         </button>

@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { getTrainerBySlug } from "@/lib/api/trainers.api";
+import { CoursesSection } from "@/components/public/CoursesSection";
 import { buildPageMetadata } from "@/lib/seo";
 
 // Trainers added after the last build must still render (see news/[slug]).
@@ -134,6 +135,9 @@ export default async function TrainerDetailPage({
           )}
         </div>
       </article>
+      <div className="mx-auto max-w-7xl px-4 pb-16 sm:px-6">
+        <CoursesSection locale={locale} />
+      </div>
     </>
   );
 }
