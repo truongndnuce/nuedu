@@ -28,6 +28,14 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: path.join(__dirname),
   },
+  // Legacy URLs from the old site (e.g. /vi/tin-tuc/lop-hoc-pt-gym-133.html,
+  // /vi/gioi-thieu.html) no longer map to any page. Send every *.html path to
+  // the homepage so old links and search results don't 404.
+  async redirects() {
+    return [
+      { source: "/:path(.*)\\.html", destination: "/", permanent: true },
+    ];
+  },
   async rewrites() {
     return {
       beforeFiles: [
